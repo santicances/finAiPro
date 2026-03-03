@@ -1223,49 +1223,149 @@ function EnterpriseDashboardDemo() {
 
 // Pricing Section
 function PricingSection({ setCurrentView }: { setCurrentView: (v: ViewType) => void }) {
-  const plans = [
-    { name: "Startup", employees: "10", price: "250", description: "Equipos pequeños", features: ["2 Agentes", "Analytics básico", "CRM Automation"], popular: false },
-    { name: "Business", employees: "25", price: "625", description: "Empresas en crecimiento", features: ["5 Agentes", "Analytics avanzado", "Call Center básico"], popular: false },
-    { name: "Professional", employees: "50", price: "1,250", description: "Operaciones complejas", features: ["12 Agentes", "Full Analytics", "RAG + ML", "Multi-empresa"], popular: true },
-    { name: "Enterprise", employees: "100", price: "2,500", description: "Grandes organizaciones", features: ["25 Agentes", "Suite completa", "API completa", "SLA 99.9%"], popular: false },
-    { name: "Enterprise Plus", employees: "250+", price: "Custom", description: "Corporaciones globales", features: ["Agentes ilimitados", "Infraestructura dedicada", "Consultoría"], popular: false },
+  const [pricingMode, setPricingMode] = useState<"empresa" | "pyme">("pyme");
+
+  const enterprisePlans = [
+    { name: "Startup", employees: "10", price: "250", description: "Equipos pequeños", features: ["2 Agentes IA", "Analytics básico", "CRM Automation", "Soporte email"], popular: false },
+    { name: "Business", employees: "25", price: "625", description: "Empresas en crecimiento", features: ["5 Agentes IA", "Analytics avanzado", "Call Center básico", "RAG básico"], popular: false },
+    { name: "Professional", employees: "50", price: "1,250", description: "Operaciones complejas", features: ["12 Agentes IA", "Full Analytics", "RAG + ML", "Multi-empresa", "API completa"], popular: true },
+    { name: "Enterprise", employees: "100", price: "2,500", description: "Grandes organizaciones", features: ["25 Agentes IA", "Suite completa", "Competencia", "SLA 99.9%", "Account Manager"], popular: false },
+    { name: "Enterprise Plus", employees: "250+", price: "Custom", description: "Corporaciones globales", features: ["Agentes ilimitados", "Infraestructura dedicada", "Fine-tuning propio", "Consultoría estratégica"], popular: false },
   ];
+
+  const pymePlans = [
+    {
+      name: "Free", price: "0", badge: "Siempre gratis", description: "Prueba sin compromiso", Icon: Rocket, color: "slate",
+      features: ["1 Agente de chat web", "Hasta 100 conversaciones/mes", "Analytics básico (CSV)", "Calendario de citas", "Soporte comunidad"], cta: "Empezar gratis", popular: false
+    },
+    {
+      name: "Chat Web", price: "25", badge: "Más vendido", description: "Chat inteligente en tu web", Icon: MessageCircle, color: "blue",
+      features: ["Chat web con IA en tu sitio", "Conversaciones ilimitadas", "Respuestas automáticas 24/7", "Captura de leads integrada", "Integración WhatsApp Business", "Soporte por email"], cta: "Activar Chat", popular: true
+    },
+    {
+      name: "Marketing", price: "79", badge: "Recomendado pymes", description: "Leads y presencia digital", Icon: Megaphone, color: "violet",
+      features: ["Chat web IA incluido", "Analítica SEO + SEM (CSV)", "Gestión de leads y llamadas", "Informes mensuales de tráfico", "Seguimiento de conversiones", "Soporte prioritario"], cta: "Empezar", popular: false
+    },
+    {
+      name: "Agencia", price: "149", badge: "Para agencias", description: "Gestiona múltiples clientes", Icon: Briefcase, color: "indigo",
+      features: ["Hasta 5 cuentas de cliente", "Chat web IA por cliente", "Dashboard multi-cliente", "Informes de rendimiento", "Calendario de citas avanzado", "Soporte telefónico"], cta: "Contactar", popular: false
+    },
+    {
+      name: "Pyme Pro", price: "249", badge: "Todo incluido", description: "Suite completa para pymes", Icon: Star, color: "amber",
+      features: ["Agentes ilimitados", "Chat web + WhatsApp + Email IA", "CRM de clientes integrado", "Analytics avanzado CSV/API", "Publicidad en redes sociales", "Landings generadas por IA", "Soporte dedicado + onboarding"], cta: "Empezar", popular: false
+    },
+  ];
+
+  const colorMap: Record<string, { bg: string; text: string; border: string; badgeCls: string; btn: string }> = {
+    slate: { bg: "bg-slate-500/10", text: "text-slate-600 dark:text-slate-400", border: "border-slate-200 dark:border-slate-700", badgeCls: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300", btn: "bg-slate-700 hover:bg-slate-800 text-white" },
+    blue: { bg: "bg-blue-500/10", text: "text-blue-600", border: "border-blue-400 shadow-lg shadow-blue-500/20", badgeCls: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200", btn: "bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white" },
+    violet: { bg: "bg-violet-500/10", text: "text-violet-600", border: "border-violet-200 dark:border-violet-800", badgeCls: "bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-200", btn: "bg-violet-600 hover:bg-violet-700 text-white" },
+    indigo: { bg: "bg-indigo-500/10", text: "text-indigo-600", border: "border-indigo-200 dark:border-indigo-800", badgeCls: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200", btn: "bg-indigo-600 hover:bg-indigo-700 text-white" },
+    amber: { bg: "bg-amber-500/10", text: "text-amber-600", border: "border-amber-300 dark:border-amber-700", badgeCls: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200", btn: "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white" },
+  };
 
   return (
     <section id="precios" className="py-20 px-4">
       <div className="max-w-7xl mx-auto">
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-10">
           <Badge className="mb-4 bg-emerald-500/10 text-emerald-600 border-emerald-500/20">Precios Transparentes</Badge>
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">Planes Adaptados a tu Tamaño</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">Desde €25 por empleado/mes. Incluye seguimiento de competencia y gestión multi-empresa.</p>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">Desde gratis hasta soluciones enterprise. Sin sorpresas, sin permanencia.</p>
         </motion.div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-          {plans.map((plan, index) => (
-            <motion.div key={plan.name} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * 0.1 }} className="relative">
-              {plan.popular && <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10"><Badge className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white"><Star className="w-3 h-3 mr-1" />Más Popular</Badge></div>}
-              <Card className={`h-full ${plan.popular ? "border-emerald-500 shadow-lg shadow-emerald-500/10" : ""}`}>
-                <CardHeader className="text-center pb-2">
-                  <div className="text-sm text-muted-foreground mb-1">{plan.employees} empleados</div>
-                  <CardTitle>{plan.name}</CardTitle>
-                  <div className="mt-4">
-                    {plan.price === "Custom" ? <div className="text-3xl font-bold">Custom</div> : <><span className="text-4xl font-bold">€{plan.price}</span><span className="text-muted-foreground">/mes</span></>}
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <ul className="space-y-2">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-2 text-sm"><Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" /><span>{feature}</span></li>
-                    ))}
-                  </ul>
-                  <Button className={`w-full ${plan.popular ? "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700" : ""}`} variant={plan.popular ? "default" : "outline"} onClick={() => setCurrentView("configuracion")}>
-                    {plan.price === "Custom" ? "Contactar" : "Empezar"}<ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+        {/* Toggle */}
+        <div className="flex justify-center mb-12">
+          <div className="p-1.5 bg-muted rounded-xl inline-flex shadow-sm items-center border border-border">
+            <button onClick={() => setPricingMode("pyme")} className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${pricingMode === "pyme" ? "bg-background shadow-sm text-blue-600" : "text-muted-foreground hover:text-foreground"}`}>
+              🏪 PYMEs y Agencias
+            </button>
+            <button onClick={() => setPricingMode("empresa")} className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${pricingMode === "empresa" ? "bg-background shadow-sm text-emerald-600" : "text-muted-foreground hover:text-foreground"}`}>
+              🏢 Gran Empresa (IA)
+            </button>
+          </div>
         </div>
+
+        {/* PYME Plans */}
+        {pricingMode === "pyme" && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+            {pymePlans.map((plan, index) => {
+              const c = colorMap[plan.color];
+              return (
+                <motion.div key={plan.name} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.07 }} className="relative">
+                  {plan.popular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                      <Badge className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg"><Star className="w-3 h-3 mr-1" />Más Popular</Badge>
+                    </div>
+                  )}
+                  <Card className={`h-full border-2 transition-all hover:scale-[1.02] ${plan.popular ? c.border : "border-border"}`}>
+                    <CardHeader className="pb-3 text-center">
+                      <div className={`w-12 h-12 rounded-xl ${c.bg} flex items-center justify-center mx-auto mb-3`}>
+                        <plan.Icon className={`w-6 h-6 ${c.text}`} />
+                      </div>
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${c.badgeCls} inline-block mb-2`}>{plan.badge}</span>
+                      <CardTitle className="text-lg">{plan.name}</CardTitle>
+                      <CardDescription className="text-xs">{plan.description}</CardDescription>
+                      <div className="mt-3">
+                        {plan.price === "0" ? (
+                          <span className="text-4xl font-bold">Gratis</span>
+                        ) : (
+                          <><span className="text-4xl font-bold">€{plan.price}</span><span className="text-muted-foreground text-sm">/mes</span></>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <ul className="space-y-2">
+                        {plan.features.map((f) => (
+                          <li key={f} className="flex items-start gap-2 text-sm">
+                            <Check className={`w-4 h-4 shrink-0 mt-0.5 ${c.text}`} />
+                            <span>{f}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <button onClick={() => setCurrentView("configuracion")} className={`w-full py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${c.btn}`}>
+                        {plan.cta} <ArrowRight className="w-4 h-4 inline ml-1" />
+                      </button>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        )}
+
+        {/* Enterprise Plans */}
+        {pricingMode === "empresa" && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+            {enterprisePlans.map((plan, index) => (
+              <motion.div key={plan.name} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }} className="relative">
+                {plan.popular && <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10"><Badge className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white"><Star className="w-3 h-3 mr-1" />Más Popular</Badge></div>}
+                <Card className={`h-full ${plan.popular ? "border-emerald-500 shadow-lg shadow-emerald-500/10" : ""}`}>
+                  <CardHeader className="text-center pb-2">
+                    <div className="text-sm text-muted-foreground mb-1">{plan.employees} empleados</div>
+                    <CardTitle>{plan.name}</CardTitle>
+                    <div className="mt-4">
+                      {plan.price === "Custom" ? <div className="text-3xl font-bold">Custom</div> : <><span className="text-4xl font-bold">€{plan.price}</span><span className="text-muted-foreground">/mes</span></>}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <ul className="space-y-2">
+                      {plan.features.map((feature) => (
+                        <li key={feature} className="flex items-start gap-2 text-sm"><Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" /><span>{feature}</span></li>
+                      ))}
+                    </ul>
+                    <Button className={`w-full ${plan.popular ? "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700" : ""}`} variant={plan.popular ? "default" : "outline"} onClick={() => setCurrentView("configuracion")}>
+                      {plan.price === "Custom" ? "Contactar" : "Empezar"}<ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+
+        <p className="text-center text-sm text-muted-foreground mt-10">
+          Sin permanencia · Cancela cuando quieras · Soporte en español · IVA no incluido
+        </p>
       </div>
     </section>
   );

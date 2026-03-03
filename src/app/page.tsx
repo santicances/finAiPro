@@ -2562,6 +2562,7 @@ function CallModal({ client, agent, onClose, onLogCall }: { client: any; agent: 
 // User Dashboard Panel
 function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentView: (v: ViewType) => void; formData: FormData; setFormData: (d: FormData) => void }) {
   const [activeTab, setActiveTab] = useState("agentes");
+  const [panelMode, setPanelMode] = useState<"enterprise" | "sme">("enterprise");
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [chatMode, setChatMode] = useState<"single" | "group">("single");
   const [chatMessages, setChatMessages] = useState<{ role: string; content: string; agent?: string }[]>([
@@ -3146,6 +3147,22 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
             </div>
 
             <div className="flex items-center gap-3">
+              {/* Mode Toggle */}
+              <button
+                onClick={() => {
+                  const next = panelMode === "enterprise" ? "sme" : "enterprise";
+                  setPanelMode(next);
+                  setActiveTab("agentes");
+                }}
+                title={panelMode === "enterprise" ? "Cambiar a modo PYME" : "Cambiar a modo Gran Empresa"}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${panelMode === "enterprise"
+                  ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/20"
+                  : "bg-blue-500/10 text-blue-600 border-blue-500/30 hover:bg-blue-500/20"
+                  }`}
+              >
+                <div className={`w-2 h-2 rounded-full ${panelMode === "enterprise" ? "bg-emerald-500" : "bg-blue-500"}`} />
+                {panelMode === "enterprise" ? "Gran Empresa" : "PYME"}
+              </button>
               <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
                 <User className="w-4 h-4" />
                 <span>{formData.nombre || "Usuario"}</span>
@@ -3169,21 +3186,23 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
         <aside className={`${sidebarOpen ? 'w-64' : 'w-0'} lg:w-64 bg-background border-r border-border transition-all duration-300 overflow-hidden shrink-0`}>
           <div className="p-4 space-y-2">
             {[
-              { id: "agentes", icon: Bot, label: "Agentes", cursor: "agent" },
-              { id: "modelos", icon: Brain, label: "Modelos", cursor: "agent" },
-              { id: "portfolio", icon: Wallet, label: "Mi Portfolio", cursor: "default" },
-              { id: "clientes", icon: Users, label: "Clientes", cursor: "default" },
-              { id: "fuentes", icon: Database, label: "Fuentes de Datos", cursor: "data" },
-              { id: "predicciones", icon: Lightbulb, label: "Predicciones", cursor: "default" },
-              { id: "tareas", icon: Zap, label: "Tareas Automáticas", cursor: "action" },
-              { id: "competencia", icon: Eye, label: "Competencia", cursor: "default" },
-              { id: "analiticas", icon: BarChart3, label: "Analíticas", cursor: "data" },
-            ].map(tab => (
+              { id: "agentes", icon: Bot, label: "Agentes", cursor: "agent", modes: ["enterprise", "sme"] },
+              { id: "modelos", icon: Brain, label: "Modelos", cursor: "agent", modes: ["enterprise"] },
+              { id: "portfolio", icon: Wallet, label: "Mi Portfolio", cursor: "default", modes: ["enterprise"] },
+              { id: "clientes", icon: Users, label: "Clientes", cursor: "default", modes: ["enterprise", "sme"] },
+              { id: "fuentes", icon: Database, label: "Fuentes de Datos", cursor: "data", modes: ["enterprise"] },
+              { id: "predicciones", icon: Lightbulb, label: "Predicciones", cursor: "default", modes: ["enterprise"] },
+              { id: "tareas", icon: Zap, label: "Tareas Automáticas", cursor: "action", modes: ["enterprise"] },
+              { id: "competencia", icon: Eye, label: "Competencia", cursor: "default", modes: ["enterprise"] },
+              { id: "analiticas", icon: BarChart3, label: panelMode === "sme" ? "Tráfico Web" : "Analíticas", cursor: "data", modes: ["enterprise", "sme"] },
+            ].filter(tab => tab.modes.includes(panelMode)).map(tab => (
               <button
                 key={tab.id}
                 onClick={() => { setActiveTab(tab.id); setCursorType(tab.cursor as any); }}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${activeTab === tab.id
-                  ? "bg-emerald-500/10 text-emerald-600 font-medium"
+                  ? panelMode === "sme"
+                    ? "bg-blue-500/10 text-blue-600 font-medium"
+                    : "bg-emerald-500/10 text-emerald-600 font-medium"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
               >
@@ -4969,7 +4988,13 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
                 )}
 
                 {/* Tab: Analíticas */}
-                {activeTab === "analiticas" && (
+                {activeTab === "analiticas" && panelMode === "sme" && (
+                  <div className="-m-6">
+                    <SmeDashboardDemo />
+                  </div>
+                )}
+
+                {activeTab === "analiticas" && panelMode === "enterprise" && (
                   <div className="space-y-4">
                     {/* Sub-tabs for Analytics */}
                     <div className="flex items-center justify-between border-b pb-2">

@@ -107,6 +107,11 @@ import {
   AlertCircle,
   CheckCircle,
   Pause,
+  Calendar as CalendarIcon,
+  MousePointerClick,
+  FileSpreadsheet,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -131,7 +136,10 @@ import {
 import { Bar, BarChart, XAxis, YAxis, PieChart as RechartsPie, Pie, Cell, Area, AreaChart, Line, LineChart as RechartsLineChart, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar as RechartsRadar } from "recharts";
 
 // Types
-type ViewType = "landing" | "equipo" | "legal" | "configuracion" | "panel";
+type ViewType = "landing" | "equipo" | "legal" | "configuracion" | "panel" | "target";
+
+import { SmeDashboardDemo } from "@/components/sme-dashboard";
+import { TargetDashboardDemo } from "@/components/target-dashboard";
 
 // Wizard Steps - Extended
 const WIZARD_STEPS = [
@@ -152,36 +160,36 @@ interface FormData {
   email: string;
   telefono: string;
   empresa: string;
-  
+
   // Step 2: Empresa
   empleados: string;
   sector: string;
   presupuestoAgente: string;
   esInversor: boolean;
   portfolioEmpresas: string;
-  
+
   // Step 3: Funciones
   funciones: string[];
-  
+
   // Step 4: Agentes
   numAgentes: string;
   tipoAgentes: string;
   distribucionAgentes: { [key: string]: number };
-  
+
   // Step 5: Modelos IA
   modelos: string[];
   modeloPrincipal: string;
-  
+
   // Step 6: Integraciones MCP
   integracionesMCP: string[];
-  
+
   // Step 7: Objetivos
   objetivoROI: string;
   plazoObjetivo: string;
   noticiasPreferidas: string[];
   seguimientoCompetencia: boolean;
   comentarios: string;
-  
+
   // Old integrations (kept for compatibility)
   integracionWeb: boolean;
   integracionWebchat: boolean;
@@ -279,12 +287,12 @@ const NEWS_SOURCES = [
 // Navbar Component
 function Navbar({ currentView, setCurrentView }: { currentView: ViewType; setCurrentView: (v: ViewType) => void }) {
   const [isOpen, setIsOpen] = useState(false);
-  
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <button 
+          <button
             onClick={() => setCurrentView("landing")}
             className="flex items-center gap-2 cursor-pointer"
           >
@@ -293,46 +301,48 @@ function Navbar({ currentView, setCurrentView }: { currentView: ViewType; setCur
             </div>
             <span className="text-xl font-bold">FinAI Pro</span>
           </button>
-          
+
           <div className="hidden md:flex items-center gap-8">
             {currentView === "landing" && (
               <>
                 <a href="#servicios" className="text-muted-foreground hover:text-foreground transition-colors">Servicios</a>
                 <a href="#inversores" className="text-muted-foreground hover:text-foreground transition-colors">Inversores</a>
-                <a href="#dashboard" className="text-muted-foreground hover:text-foreground transition-colors">Dashboard</a>
+                <a href="#dashboard" className="text-muted-foreground hover:text-foreground transition-colors">Dashboard IA</a>
+                <a href="#dashboard" className="text-muted-foreground hover:text-foreground transition-colors font-medium text-blue-500">Dashboard Pymes</a>
+                <button onClick={() => setCurrentView("target")} className="text-muted-foreground hover:text-blue-500 transition-colors">Configurar Target</button>
                 <a href="#precios" className="text-muted-foreground hover:text-foreground transition-colors">Precios</a>
               </>
             )}
-            <button 
+            <button
               onClick={() => setCurrentView("equipo")}
               className={`transition-colors ${currentView === "equipo" ? "text-emerald-500" : "text-muted-foreground hover:text-foreground"}`}
             >
               Equipo
             </button>
-            <button 
+            <button
               onClick={() => setCurrentView("legal")}
               className={`transition-colors ${currentView === "legal" ? "text-emerald-500" : "text-muted-foreground hover:text-foreground"}`}
             >
               Legal
             </button>
           </div>
-          
+
           <div className="hidden md:flex items-center gap-4">
             <Button variant="ghost">Iniciar Sesión</Button>
-            <Button 
+            <Button
               className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
               onClick={() => setCurrentView("configuracion")}
             >
               Demo Gratis
             </Button>
           </div>
-          
+
           <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
       </div>
-      
+
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -346,7 +356,9 @@ function Navbar({ currentView, setCurrentView }: { currentView: ViewType; setCur
                 <>
                   <a href="#servicios" className="block text-muted-foreground hover:text-foreground">Servicios</a>
                   <a href="#inversores" className="block text-muted-foreground hover:text-foreground">Inversores</a>
-                  <a href="#dashboard" className="block text-muted-foreground hover:text-foreground">Dashboard</a>
+                  <a href="#dashboard" className="block text-muted-foreground hover:text-foreground">Dashboard IA</a>
+                  <a href="#dashboard" className="block font-medium text-blue-500 hover:text-blue-600">Dashboard Pymes</a>
+                  <button onClick={() => { setCurrentView("target"); setIsOpen(false); }} className="block text-muted-foreground hover:text-blue-500 w-full text-left">Configurar Target</button>
                   <a href="#precios" className="block text-muted-foreground hover:text-foreground">Precios</a>
                 </>
               )}
@@ -372,23 +384,23 @@ function HeroSection({ setCurrentView }: { setCurrentView: (v: ViewType) => void
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-teal-500/20 rounded-full blur-3xl" />
       </div>
-      
+
       <div className="max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
             <Badge className="mb-4 bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
               <Sparkles className="w-3 h-3 mr-1" />Impulsado por IA Avanzada
             </Badge>
-            
+
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
               Transforma tu Empresa Financiera con{" "}
               <span className="bg-gradient-to-r from-emerald-500 to-teal-600 bg-clip-text text-transparent">Inteligencia Artificial</span>
             </h1>
-            
+
             <p className="text-lg text-muted-foreground mb-8 max-w-xl">
               Automatiza procesos, optimiza carteras y multiplica la productividad de tu equipo con agentes digitales que aprenden y replican el comportamiento de tus mejores empleados.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-4">
               <Button size="lg" className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 gap-2" onClick={() => setCurrentView("configuracion")}>
                 Solicitar Demo <ArrowRight className="w-4 h-4" />
@@ -397,7 +409,7 @@ function HeroSection({ setCurrentView }: { setCurrentView: (v: ViewType) => void
                 <Play className="w-4 h-4" /> Ver Video
               </Button>
             </div>
-            
+
             <div className="flex items-center gap-8 mt-10">
               <div><div className="text-3xl font-bold">500+</div><div className="text-sm text-muted-foreground">Empresas Activas</div></div>
               <div className="w-px h-12 bg-border" />
@@ -406,7 +418,7 @@ function HeroSection({ setCurrentView }: { setCurrentView: (v: ViewType) => void
               <div><div className="text-3xl font-bold">3x</div><div className="text-sm text-muted-foreground">ROI Promedio</div></div>
             </div>
           </motion.div>
-          
+
           <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className="relative">
             <div className="bg-card rounded-2xl border border-border shadow-2xl p-6">
               <div className="flex items-center justify-between mb-4">
@@ -417,7 +429,7 @@ function HeroSection({ setCurrentView }: { setCurrentView: (v: ViewType) => void
                 </div>
                 <span className="text-xs text-muted-foreground">Dashboard en vivo</span>
               </div>
-              
+
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-muted/50 rounded-xl">
                   <div className="flex items-center gap-3">
@@ -434,7 +446,7 @@ function HeroSection({ setCurrentView }: { setCurrentView: (v: ViewType) => void
                     <span className="text-sm text-emerald-500">Activo</span>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-3 gap-4">
                   <div className="text-center p-3 bg-muted/50 rounded-xl">
                     <div className="text-2xl font-bold text-emerald-500">847</div>
@@ -449,7 +461,7 @@ function HeroSection({ setCurrentView }: { setCurrentView: (v: ViewType) => void
                     <div className="text-xs text-muted-foreground">Éxito</div>
                   </div>
                 </div>
-                
+
                 <div className="p-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-xl border border-emerald-500/20">
                   <div className="flex items-center gap-2 mb-2">
                     <Brain className="w-4 h-4 text-emerald-500" />
@@ -460,7 +472,7 @@ function HeroSection({ setCurrentView }: { setCurrentView: (v: ViewType) => void
                 </div>
               </div>
             </div>
-            
+
             <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 3, repeat: Infinity }} className="absolute -top-4 -right-4 bg-card border border-border rounded-xl p-3 shadow-lg">
               <div className="flex items-center gap-2"><TrendingUp className="w-5 h-5 text-emerald-500" /><span className="text-sm font-medium">+23% ROI</span></div>
             </motion.div>
@@ -484,7 +496,7 @@ function ServicesSection() {
     { icon: Bot, title: "Trabajadores Digitales", description: "Agentes que trabajan 24/7.", features: ["24/7 operativo", "Sin errores", "Escalables"] },
     { icon: Wallet, title: "Portfolio Inteligente", description: "Gestión de inversiones con IA.", features: ["Diversificación", "Rebalanceo auto", "Alertas riesgo"] },
   ];
-  
+
   return (
     <section id="servicios" className="py-20 px-4 bg-muted/30">
       <div className="max-w-7xl mx-auto">
@@ -493,7 +505,7 @@ function ServicesSection() {
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">Soluciones de IA para Empresas Financieras</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">Desde gestión de cobros hasta fondos de inversión, automatizamos cada proceso.</p>
         </motion.div>
-        
+
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {services.map((service, index) => (
             <motion.div key={service.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * 0.1 }}>
@@ -516,7 +528,7 @@ function ServicesSection() {
             </motion.div>
           ))}
         </div>
-        
+
         {/* Models & Technologies Section */}
         <div className="mt-16 grid lg:grid-cols-2 gap-8">
           {/* AI Models */}
@@ -550,12 +562,11 @@ function ServicesSection() {
                     <div key={i} className="p-3 bg-muted/50 rounded-lg border hover:border-purple-500/50 transition-colors">
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-medium text-sm truncate">{model.name}</span>
-                        <Badge variant="outline" className={`text-xs ml-1 shrink-0 ${
-                          model.tier === "Premium" ? "border-purple-500/50 text-purple-500" :
+                        <Badge variant="outline" className={`text-xs ml-1 shrink-0 ${model.tier === "Premium" ? "border-purple-500/50 text-purple-500" :
                           model.tier === "Economy" ? "border-cyan-500/50 text-cyan-500" :
-                          model.tier === "Specialized" ? "border-yellow-500/50 text-yellow-600" :
-                          "border-teal-500/50 text-teal-500"
-                        }`}>
+                            model.tier === "Specialized" ? "border-yellow-500/50 text-yellow-600" :
+                              "border-teal-500/50 text-teal-500"
+                          }`}>
                           {model.tier}
                         </Badge>
                       </div>
@@ -566,7 +577,7 @@ function ServicesSection() {
               </CardContent>
             </Card>
           </motion.div>
-          
+
           {/* MCP Integrations */}
           <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
             <Card className="h-full bg-gradient-to-br from-teal-500/5 to-cyan-500/5 border-teal-500/20">
@@ -629,11 +640,11 @@ function InvestorSection() {
             Gestiona tu Portfolio de Empresas con IA
           </h2>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-            ¿Eres directivo o inversor con participación en múltiples empresas? Nuestro sistema te permite gestionar tu portfolio de agentes, 
+            ¿Eres directivo o inversor con participación en múltiples empresas? Nuestro sistema te permite gestionar tu portfolio de agentes,
             asignar recursos donde más valor generan, y mantener seguimiento automático de la competencia.
           </p>
         </motion.div>
-        
+
         {/* Main Value Proposition */}
         <div className="grid lg:grid-cols-2 gap-8 mb-12">
           <motion.div initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
@@ -651,7 +662,7 @@ function InvestorSection() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  Imagina que eres directivo con participación en varias empresas del sector financiero. 
+                  Imagina que eres directivo con participación en varias empresas del sector financiero.
                   Nuestro sistema te permite:
                 </p>
                 <ul className="space-y-2">
@@ -671,7 +682,7 @@ function InvestorSection() {
               </CardContent>
             </Card>
           </motion.div>
-          
+
           <motion.div initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
             <Card className="h-full bg-gradient-to-br from-emerald-500/5 to-cyan-500/5 border-emerald-500/20">
               <CardHeader>
@@ -707,7 +718,7 @@ function InvestorSection() {
             </Card>
           </motion.div>
         </div>
-        
+
         {/* News & Market Data */}
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
           <Card className="bg-gradient-to-r from-yellow-500/5 via-orange-500/5 to-red-500/5 border-yellow-500/20">
@@ -744,7 +755,7 @@ function InvestorSection() {
             </CardContent>
           </Card>
         </motion.div>
-        
+
         {/* Example Scenario */}
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mt-12">
           <Card className="border-2 border-emerald-500/30">
@@ -802,10 +813,39 @@ function InvestorSection() {
   );
 }
 
-// Dashboard Demo Section with Competition Tracking
+// Wrapper for Dashboard Section
 function DashboardDemoSection() {
+  const [dashboardType, setDashboardType] = useState<"enterprise" | "sme">("sme");
+
+  return (
+    <div id="dashboard" className="pt-20 -mt-20 flex flex-col items-center">
+      <div className="mb-8 z-10 relative">
+        <div className="p-1.5 bg-muted rounded-xl inline-flex shadow-sm items-center border border-border">
+          <button
+            onClick={() => setDashboardType("enterprise")}
+            className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${dashboardType === "enterprise" ? "bg-background shadow-sm text-emerald-600 dark:text-emerald-400" : "text-muted-foreground hover:text-foreground hover:bg-muted-foreground/5"}`}
+          >
+            Gran Empresa (IA Avanzada)
+          </button>
+          <button
+            onClick={() => setDashboardType("sme")}
+            className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${dashboardType === "sme" ? "bg-background shadow-sm text-blue-600 dark:text-blue-400" : "text-muted-foreground hover:text-foreground hover:bg-muted-foreground/5"}`}
+          >
+            PYMEs y Agencias
+          </button>
+        </div>
+      </div>
+      <div className="w-full">
+        {dashboardType === "enterprise" ? <EnterpriseDashboardDemo /> : <SmeDashboardDemo />}
+      </div>
+    </div>
+  );
+}
+
+// Enterprise Dashboard Section with Competition Tracking
+function EnterpriseDashboardDemo() {
   const [activeTab, setActiveTab] = useState("portfolio");
-  
+
   const portfolioData = [
     { name: "Ene", valor: 100, roi: 0 },
     { name: "Feb", valor: 105, roi: 5 },
@@ -814,14 +854,14 @@ function DashboardDemoSection() {
     { name: "May", valor: 125, roi: 25 },
     { name: "Jun", valor: 134, roi: 34 },
   ];
-  
+
   const empresasPortfolio = [
     { name: "FinTech Cobros S.L.", participacion: 25, agentes: 12, roi: "+34%", tendencia: "up", color: "#10b981" },
     { name: "CreditCards Pro", participacion: 18, agentes: 8, roi: "+22%", tendencia: "up", color: "#14b8a6" },
     { name: "InvestFund Management", participacion: 15, agentes: 5, roi: "+41%", tendencia: "up", color: "#06b6d4" },
     { name: "DebtRecovery AI", participacion: 10, agentes: 3, roi: "-5%", tendencia: "down", color: "#f59e0b" },
   ];
-  
+
   const competenciaData = [
     { metric: "Producto", nosotros: 95, competencia: 82 },
     { metric: "Precio", nosotros: 78, competencia: 85 },
@@ -829,15 +869,15 @@ function DashboardDemoSection() {
     { metric: "Innovación", nosotros: 88, competencia: 90 },
     { metric: "Market Share", nosotros: 70, competencia: 85 },
   ];
-  
+
   const alertasCompetencia = [
     { tipo: "producto", empresa: "CompetidorX", mensaje: "Lanzó nuevo producto de gestión de cobros", prioridad: "alta", tiempo: "Hace 2h" },
     { tipo: "partnership", empresa: "AlliedFin", mensaje: "Posible partner para expansión LATAM", prioridad: "media", tiempo: "Hace 1d" },
     { tipo: "mercado", empresa: "MarketWatch", mensaje: "Nueva regulación favorece tu modelo de negocio", prioridad: "alta", tiempo: "Hace 3d" },
   ];
-  
+
   const chartConfig = { valor: { label: "Valor" }, roi: { label: "ROI %" } } satisfies ChartConfig;
-  
+
   return (
     <section id="dashboard" className="py-20 px-4 bg-muted/30">
       <div className="max-w-7xl mx-auto">
@@ -848,7 +888,7 @@ function DashboardDemoSection() {
             Gestiona tu portfolio de empresas, asigna recursos, monitoriza la competencia y detecta oportunidades de negocio.
           </p>
         </motion.div>
-        
+
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
           <Card className="overflow-hidden shadow-xl">
             <div className="bg-gradient-to-r from-emerald-500/5 to-teal-500/5 p-6 border-b">
@@ -864,7 +904,7 @@ function DashboardDemoSection() {
                 </div>
               </div>
             </div>
-            
+
             <CardContent className="p-6">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full grid-cols-4 mb-6">
@@ -873,7 +913,7 @@ function DashboardDemoSection() {
                   <TabsTrigger value="agentes">Agentes</TabsTrigger>
                   <TabsTrigger value="noticias">Noticias</TabsTrigger>
                 </TabsList>
-                
+
                 {/* Portfolio Tab */}
                 <TabsContent value="portfolio" className="space-y-6">
                   <div className="grid sm:grid-cols-4 gap-4">
@@ -882,7 +922,7 @@ function DashboardDemoSection() {
                     <Card><CardContent className="p-4"><div className="text-2xl font-bold text-teal-500">28</div><div className="text-sm text-muted-foreground">Agentes Totales</div></CardContent></Card>
                     <Card><CardContent className="p-4"><div className="text-2xl font-bold text-cyan-500">+23%</div><div className="text-sm text-muted-foreground">ROI Promedio</div></CardContent></Card>
                   </div>
-                  
+
                   <div className="grid lg:grid-cols-2 gap-6">
                     <Card>
                       <CardHeader><CardTitle className="text-base">Evolución del Portfolio</CardTitle></CardHeader>
@@ -897,7 +937,7 @@ function DashboardDemoSection() {
                         </ChartContainer>
                       </CardContent>
                     </Card>
-                    
+
                     <Card>
                       <CardHeader><CardTitle className="text-base">Distribución por Empresa</CardTitle></CardHeader>
                       <CardContent>
@@ -928,7 +968,7 @@ function DashboardDemoSection() {
                     </Card>
                   </div>
                 </TabsContent>
-                
+
                 {/* Competition Tab */}
                 <TabsContent value="competencia" className="space-y-6">
                   <div className="grid lg:grid-cols-3 gap-6">
@@ -956,7 +996,7 @@ function DashboardDemoSection() {
                         </div>
                       </CardContent>
                     </Card>
-                    
+
                     <Card>
                       <CardHeader>
                         <CardTitle className="text-base flex items-center gap-2">
@@ -984,7 +1024,7 @@ function DashboardDemoSection() {
                       </CardContent>
                     </Card>
                   </div>
-                  
+
                   {/* Potential Partners */}
                   <Card>
                     <CardHeader>
@@ -1017,7 +1057,7 @@ function DashboardDemoSection() {
                     </CardContent>
                   </Card>
                 </TabsContent>
-                
+
                 {/* Agents Tab */}
                 <TabsContent value="agentes" className="space-y-6">
                   {/* Agent Status Cards */}
@@ -1058,7 +1098,7 @@ function DashboardDemoSection() {
                       </Card>
                     ))}
                   </div>
-                  
+
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-base flex items-center gap-2">
@@ -1095,14 +1135,14 @@ function DashboardDemoSection() {
                           </div>
                         ))}
                       </div>
-                      
+
                       <div className="mt-6 p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
                         <div className="flex items-center gap-2 mb-2">
                           <Sparkles className="w-4 h-4 text-emerald-500" />
                           <span className="font-medium">Sugerencia IA</span>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          Basado en el análisis de ROI, se recomienda aumentar los agentes en "Análisis de Inversiones" 
+                          Basado en el análisis de ROI, se recomienda aumentar los agentes en "Análisis de Inversiones"
                           en InvestFund. ROI potencial estimado: +15% adicional.
                         </p>
                         <Button size="sm" className="mt-3 bg-emerald-500">
@@ -1112,7 +1152,7 @@ function DashboardDemoSection() {
                     </CardContent>
                   </Card>
                 </TabsContent>
-                
+
                 {/* News Tab */}
                 <TabsContent value="noticias" className="space-y-6">
                   <div className="grid lg:grid-cols-3 gap-6">
@@ -1148,7 +1188,7 @@ function DashboardDemoSection() {
                         </div>
                       </CardContent>
                     </Card>
-                    
+
                     <Card>
                       <CardHeader>
                         <CardTitle className="text-base">Fuentes Configuradas</CardTitle>
@@ -1190,7 +1230,7 @@ function PricingSection({ setCurrentView }: { setCurrentView: (v: ViewType) => v
     { name: "Enterprise", employees: "100", price: "2,500", description: "Grandes organizaciones", features: ["25 Agentes", "Suite completa", "API completa", "SLA 99.9%"], popular: false },
     { name: "Enterprise Plus", employees: "250+", price: "Custom", description: "Corporaciones globales", features: ["Agentes ilimitados", "Infraestructura dedicada", "Consultoría"], popular: false },
   ];
-  
+
   return (
     <section id="precios" className="py-20 px-4">
       <div className="max-w-7xl mx-auto">
@@ -1199,7 +1239,7 @@ function PricingSection({ setCurrentView }: { setCurrentView: (v: ViewType) => v
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">Planes Adaptados a tu Tamaño</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">Desde €25 por empleado/mes. Incluye seguimiento de competencia y gestión multi-empresa.</p>
         </motion.div>
-        
+
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
           {plans.map((plan, index) => (
             <motion.div key={plan.name} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * 0.1 }} className="relative">
@@ -1238,9 +1278,9 @@ function SupportChat() {
   const [messages, setMessages] = useState([{ role: "assistant", content: "¡Hola! 👋 Soy el asistente de FinAI Pro. ¿En qué puedo ayudarte hoy?" }]);
   const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
+
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
-  
+
   const handleSend = () => {
     if (!inputValue.trim()) return;
     setMessages([...messages, { role: "user", content: inputValue }]);
@@ -1250,13 +1290,13 @@ function SupportChat() {
       setMessages(prev => [...prev, { role: "assistant", content: responses[Math.floor(Math.random() * responses.length)] }]);
     }, 1000);
   };
-  
+
   return (
     <>
       <motion.button initial={{ scale: 0 }} animate={{ scale: 1 }} className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg flex items-center justify-center hover:shadow-xl transition-shadow" onClick={() => setIsOpen(!isOpen)}>
         {isOpen ? <X className="w-6 h-6" /> : <MessageSquare className="w-6 h-6" />}
       </motion.button>
-      
+
       <AnimatePresence>
         {isOpen && (
           <motion.div initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.95 }} className="fixed bottom-24 right-6 z-50 w-96 max-w-[calc(100vw-48px)] bg-card border border-border rounded-2xl shadow-2xl overflow-hidden">
@@ -1284,7 +1324,7 @@ function SupportChat() {
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       {showMeetingDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="fixed inset-0 bg-black/50" onClick={() => setShowMeetingDialog(false)} />
@@ -1312,24 +1352,24 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<FormData>(externalFormData || initialFormData);
   const [recommendedPlan, setRecommendedPlan] = useState<string>("");
-  
+
   const updateFormData = (updates: Partial<FormData>) => {
     const newData = { ...formData, ...updates };
     setFormData(newData);
     setExternalFormData(newData);
   };
-  
+
   const nextStep = () => {
     if (currentStep < 8) {
       setCurrentStep(currentStep + 1);
       if (currentStep === 7) calculateRecommendedPlan();
     }
   };
-  
+
   const prevStep = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
-  
+
   const calculateRecommendedPlan = () => {
     const empleados = parseInt(formData.empleados) || 0;
     if (empleados <= 10) setRecommendedPlan("Startup");
@@ -1338,12 +1378,12 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
     else if (empleados <= 100) setRecommendedPlan("Enterprise");
     else setRecommendedPlan("Enterprise Plus");
   };
-  
+
   const handleComplete = () => {
     setExternalFormData(formData);
     setCurrentView("panel");
   };
-  
+
   const funciones = [
     { id: "analytics", label: "Data Analytics", icon: BarChart3 },
     { id: "etl", label: "ETL & Data Pipeline", icon: Database },
@@ -1355,11 +1395,11 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
     { id: "workers", label: "Trabajadores Digitales", icon: Bot },
     { id: "portfolio", label: "Portfolio Inteligente", icon: Wallet },
   ];
-  
+
   const sectores = ["Gestión de Cobros", "Tarjetas de Crédito", "Activos y Pasivos", "Fondos de Inversión", "Banca Minorista", "Banca Corporativa", "Fintech", "Seguros", "Inversiones", "Otros"];
-  
+
   const progress = (currentStep / 8) * 100;
-  
+
   return (
     <div className="pt-24 pb-20 px-4 min-h-screen bg-gradient-to-br from-emerald-500/5 via-background to-teal-500/5">
       <div className="max-w-4xl mx-auto">
@@ -1368,7 +1408,7 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
           <h1 className="text-3xl sm:text-4xl font-bold mb-2">Configuremos tu Solución Ideal</h1>
           <p className="text-muted-foreground">Responde estas preguntas para ofrecerte el producto perfecto</p>
         </motion.div>
-        
+
         <div className="mb-8">
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm text-muted-foreground">Paso {currentStep} de 8</span>
@@ -1376,7 +1416,7 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
           </div>
           <Progress value={progress} className="h-2" />
         </div>
-        
+
         <div className="flex justify-between mb-8 overflow-x-auto pb-2">
           {WIZARD_STEPS.map((step) => (
             <button key={step.id} onClick={() => step.id < currentStep && setCurrentStep(step.id)} disabled={step.id > currentStep} className={`flex flex-col items-center min-w-[70px] ${step.id === currentStep ? "text-emerald-500" : step.id < currentStep ? "text-emerald-600 cursor-pointer" : "text-muted-foreground opacity-50"}`}>
@@ -1387,7 +1427,7 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
             </button>
           ))}
         </div>
-        
+
         <AnimatePresence mode="wait">
           <motion.div key={currentStep} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
             <Card className="shadow-xl">
@@ -1409,7 +1449,7 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                     </div>
                   </div>
                 )}
-                
+
                 {/* Step 2: Empresa */}
                 {currentStep === 2 && (
                   <div className="space-y-6">
@@ -1438,7 +1478,7 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                         </Select>
                       </div>
                     </div>
-                    
+
                     <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl">
                       <label className="flex items-center gap-3 cursor-pointer">
                         <Checkbox checked={formData.esInversor} onCheckedChange={(checked) => updateFormData({ esInversor: checked as boolean })} />
@@ -1448,7 +1488,7 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                         </div>
                       </label>
                     </div>
-                    
+
                     {formData.esInversor && (
                       <div className="space-y-2">
                         <Label>¿En cuántas empresas tienes participación?</Label>
@@ -1464,7 +1504,7 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                         </Select>
                       </div>
                     )}
-                    
+
                     <div className="space-y-2"><Label>Presupuesto por agente/mes</Label>
                       <Select value={formData.presupuestoAgente} onValueChange={(v) => updateFormData({ presupuestoAgente: v })}>
                         <SelectTrigger><SelectValue placeholder="Selecciona un rango" /></SelectTrigger>
@@ -1479,7 +1519,7 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                     </div>
                   </div>
                 )}
-                
+
                 {/* Step 3: Funciones */}
                 {currentStep === 3 && (
                   <div className="space-y-6">
@@ -1490,7 +1530,7 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                     <div className="grid sm:grid-cols-2 gap-3">
                       {funciones.map((func) => (
                         <label key={func.id} className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${formData.funciones.includes(func.id) ? "border-emerald-500 bg-emerald-500/5" : "hover:border-emerald-500/50"}`}>
-                          <Checkbox checked={formData.funciones.includes(func.id)} onCheckedChange={(checked) => { if (checked) { updateFormData({ funciones: [...formData.funciones, func.id] }); } else { updateFormData({ funciones: formData.funciones.filter(f => f !== func.id) }); }}} />
+                          <Checkbox checked={formData.funciones.includes(func.id)} onCheckedChange={(checked) => { if (checked) { updateFormData({ funciones: [...formData.funciones, func.id] }); } else { updateFormData({ funciones: formData.funciones.filter(f => f !== func.id) }); } }} />
                           <func.icon className="w-5 h-5 text-emerald-500" />
                           <span className="font-medium">{func.label}</span>
                         </label>
@@ -1498,7 +1538,7 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                     </div>
                   </div>
                 )}
-                
+
                 {/* Step 4: Agentes */}
                 {currentStep === 4 && (
                   <div className="space-y-6">
@@ -1506,7 +1546,7 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                       <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center"><Bot className="w-6 h-6 text-emerald-500" /></div>
                       <div><h2 className="text-xl font-semibold">Configuración de Agentes</h2><p className="text-sm text-muted-foreground">Selecciona los roles de agentes que necesitas</p></div>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label>Número de agentes digitales</Label>
                       <Select value={formData.numAgentes} onValueChange={(v) => updateFormData({ numAgentes: v })}>
@@ -1520,7 +1560,7 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     <div className="space-y-3">
                       <Label>Roles de Agentes</Label>
                       <p className="text-xs text-muted-foreground">Selecciona los roles que necesitas para tu empresa</p>
@@ -1528,15 +1568,14 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                         {AGENT_ROLES.map((role) => {
                           const RoleIcon = role.icon;
                           return (
-                            <label 
-                              key={role.id} 
-                              className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${
-                                formData.funciones?.includes(role.id) 
-                                  ? "border-emerald-500 bg-emerald-500/5" 
-                                  : "hover:border-emerald-500/50"
-                              }`}
+                            <label
+                              key={role.id}
+                              className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all ${formData.funciones?.includes(role.id)
+                                ? "border-emerald-500 bg-emerald-500/5"
+                                : "hover:border-emerald-500/50"
+                                }`}
                             >
-                              <Checkbox 
+                              <Checkbox
                                 checked={formData.funciones?.includes(role.id) || false}
                                 onCheckedChange={(checked) => {
                                   const currentFunciones = formData.funciones || [];
@@ -1562,7 +1601,7 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                         })}
                       </div>
                     </div>
-                    
+
                     {formData.esInversor && (
                       <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl">
                         <h4 className="font-medium mb-3 flex items-center gap-2">
@@ -1578,7 +1617,7 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                     )}
                   </div>
                 )}
-                
+
                 {/* Step 5: Modelos IA - NEW */}
                 {currentStep === 5 && (
                   <div className="space-y-6">
@@ -1586,7 +1625,7 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                       <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center"><Brain className="w-6 h-6 text-purple-500" /></div>
                       <div><h2 className="text-xl font-semibold">Modelos de IA</h2><p className="text-sm text-muted-foreground">Selecciona los modelos para tus agentes</p></div>
                     </div>
-                    
+
                     <div className="space-y-2 mb-4">
                       <Label>Modelo principal</Label>
                       <Select value={formData.modeloPrincipal} onValueChange={(v) => updateFormData({ modeloPrincipal: v })}>
@@ -1600,14 +1639,14 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label>Modelos adicionales (opcional)</Label>
                       <p className="text-xs text-muted-foreground">Puedes usar múltiples modelos para diferentes tareas</p>
                       <div className="grid sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto">
                         {AI_MODELS.map((model) => (
                           <label key={model.id} className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all text-sm ${formData.modelos.includes(model.id) ? "border-purple-500 bg-purple-500/5" : "hover:border-purple-500/50"}`}>
-                            <Checkbox checked={formData.modelos.includes(model.id)} onCheckedChange={(checked) => { if (checked) { updateFormData({ modelos: [...formData.modelos, model.id] }); } else { updateFormData({ modelos: formData.modelos.filter(m => m !== model.id) }); }}} />
+                            <Checkbox checked={formData.modelos.includes(model.id)} onCheckedChange={(checked) => { if (checked) { updateFormData({ modelos: [...formData.modelos, model.id] }); } else { updateFormData({ modelos: formData.modelos.filter(m => m !== model.id) }); } }} />
                             <div className="flex-1">
                               <div className="font-medium">{model.name}</div>
                               <div className="text-xs text-muted-foreground">{model.speed} • {model.cost}</div>
@@ -1616,7 +1655,7 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                         ))}
                       </div>
                     </div>
-                    
+
                     <div className="p-4 bg-muted/50 rounded-xl">
                       <h4 className="font-medium mb-2">Comparativa rápida</h4>
                       <div className="grid grid-cols-3 gap-2 text-xs">
@@ -1627,7 +1666,7 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                     </div>
                   </div>
                 )}
-                
+
                 {/* Step 6: MCP Integrations - NEW */}
                 {currentStep === 6 && (
                   <div className="space-y-6">
@@ -1635,11 +1674,11 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                       <div className="w-12 h-12 rounded-xl bg-teal-500/10 flex items-center justify-center"><Puzzle className="w-6 h-6 text-teal-500" /></div>
                       <div><h2 className="text-xl font-semibold">Integraciones MCP</h2><p className="text-sm text-muted-foreground">Conecta con tus herramientas favoritas</p></div>
                     </div>
-                    
+
                     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       {MCP_INTEGRATIONS.map((int) => (
                         <label key={int.id} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${formData.integracionesMCP.includes(int.id) ? "border-teal-500 bg-teal-500/5" : "hover:border-teal-500/50"}`}>
-                          <Checkbox checked={formData.integracionesMCP.includes(int.id)} onCheckedChange={(checked) => { if (checked) { updateFormData({ integracionesMCP: [...formData.integracionesMCP, int.id] }); } else { updateFormData({ integracionesMCP: formData.integracionesMCP.filter(i => i !== int.id) }); }}} />
+                          <Checkbox checked={formData.integracionesMCP.includes(int.id)} onCheckedChange={(checked) => { if (checked) { updateFormData({ integracionesMCP: [...formData.integracionesMCP, int.id] }); } else { updateFormData({ integracionesMCP: formData.integracionesMCP.filter(i => i !== int.id) }); } }} />
                           <int.icon className="w-5 h-5 text-teal-500" />
                           <div className="flex-1 min-w-0">
                             <div className="font-medium text-sm truncate">{int.name}</div>
@@ -1648,17 +1687,17 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                         </label>
                       ))}
                     </div>
-                    
+
                     <div className="p-4 bg-teal-500/10 border border-teal-500/20 rounded-xl">
                       <div className="flex items-center gap-2 mb-2"><Sparkles className="w-4 h-4 text-teal-500" /><span className="font-medium">MCP (Model Context Protocol)</span></div>
                       <p className="text-sm text-muted-foreground">
-                        Nuestros agentes pueden conectarse directamente a estas herramientas para ejecutar acciones, 
+                        Nuestros agentes pueden conectarse directamente a estas herramientas para ejecutar acciones,
                         leer datos y automatizar flujos de trabajo completos.
                       </p>
                     </div>
                   </div>
                 )}
-                
+
                 {/* Step 7: Objetivos */}
                 {currentStep === 7 && (
                   <div className="space-y-6">
@@ -1666,7 +1705,7 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                       <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center"><Target className="w-6 h-6 text-emerald-500" /></div>
                       <div><h2 className="text-xl font-semibold">Objetivos y Noticias</h2><p className="text-sm text-muted-foreground">Configura pronósticos y fuentes de datos</p></div>
                     </div>
-                    
+
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div className="space-y-2"><Label>Objetivo de ROI esperado</Label>
                         <Select value={formData.objetivoROI} onValueChange={(v) => updateFormData({ objetivoROI: v })}>
@@ -1692,13 +1731,13 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                         </Select>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label>Fuentes de noticias preferidas</Label>
                       <div className="grid sm:grid-cols-2 gap-2">
                         {NEWS_SOURCES.map((fuente) => (
                           <label key={fuente.id} className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-all ${formData.noticiasPreferidas.includes(fuente.id) ? "border-yellow-500 bg-yellow-500/5" : "hover:border-yellow-500/50"}`}>
-                            <Checkbox checked={formData.noticiasPreferidas.includes(fuente.id)} onCheckedChange={(checked) => { if (checked) { updateFormData({ noticiasPreferidas: [...formData.noticiasPreferidas, fuente.id] }); } else { updateFormData({ noticiasPreferidas: formData.noticiasPreferidas.filter(n => n !== fuente.id) }); }}} />
+                            <Checkbox checked={formData.noticiasPreferidas.includes(fuente.id)} onCheckedChange={(checked) => { if (checked) { updateFormData({ noticiasPreferidas: [...formData.noticiasPreferidas, fuente.id] }); } else { updateFormData({ noticiasPreferidas: formData.noticiasPreferidas.filter(n => n !== fuente.id) }); } }} />
                             <Newspaper className="w-4 h-4 text-yellow-500" />
                             <div className="flex-1">
                               <div className="flex items-center gap-2">
@@ -1712,7 +1751,7 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                         ))}
                       </div>
                     </div>
-                    
+
                     {formData.esInversor && (
                       <div className="p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl">
                         <label className="flex items-center gap-3 cursor-pointer">
@@ -1724,12 +1763,12 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                         </label>
                       </div>
                     )}
-                    
+
                     <div className="space-y-2"><Label>Comentarios adicionales</Label>
                       <Textarea placeholder="Cuéntanos más sobre tus necesidades..." value={formData.comentarios} onChange={(e) => updateFormData({ comentarios: e.target.value })} rows={3} /></div>
                   </div>
                 )}
-                
+
                 {/* Step 8: Contrato */}
                 {currentStep === 8 && (
                   <div className="space-y-6">
@@ -1737,7 +1776,7 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                       <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center"><FileSignature className="w-6 h-6 text-emerald-500" /></div>
                       <div><h2 className="text-xl font-semibold">Tu Plan Recomendado</h2><p className="text-sm text-muted-foreground">Basado en tus respuestas</p></div>
                     </div>
-                    
+
                     <Card className="border-2 border-emerald-500 bg-gradient-to-r from-emerald-500/5 to-teal-500/5">
                       <CardContent className="p-6">
                         <div className="flex items-center justify-between mb-4">
@@ -1762,7 +1801,7 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                         </div>
                       </CardContent>
                     </Card>
-                    
+
                     <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
                       <div className="flex items-start gap-3">
                         <Zap className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
@@ -1772,7 +1811,7 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Contract with Scroll Bar */}
                     <Card className="border-2 border-emerald-500/30">
                       <CardHeader className="bg-emerald-500/5 pb-3">
@@ -1793,9 +1832,9 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                               ))}
                             </div>
                           </div>
-                          
+
                           <Separator />
-                          
+
                           {/* Condiciones */}
                           <div>
                             <h4 className="font-semibold text-foreground mb-2 text-xs uppercase tracking-wider">Términos del Plan</h4>
@@ -1808,9 +1847,9 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                               ))}
                             </div>
                           </div>
-                          
+
                           <Separator />
-                          
+
                           {/* Cláusulas */}
                           <div>
                             <h4 className="font-semibold text-foreground mb-3 text-xs uppercase tracking-wider">Cláusulas Contractuales</h4>
@@ -1853,9 +1892,9 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                               </div>
                             </div>
                           </div>
-                          
+
                           <Separator />
-                          
+
                           {/* Privacy Summary */}
                           <div>
                             <h4 className="font-semibold text-foreground mb-2 text-xs uppercase tracking-wider">Resumen Privacidad</h4>
@@ -1870,7 +1909,7 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                         </div>
                       </CardContent>
                     </Card>
-                    
+
                     <div className="flex items-start gap-3 p-4 bg-emerald-500/5 rounded-xl border border-emerald-500/20">
                       <Checkbox id="acceptTerms" />
                       <label htmlFor="acceptTerms" className="text-sm cursor-pointer">
@@ -1880,7 +1919,7 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
                   </div>
                 )}
               </CardContent>
-              
+
               <CardFooter className="flex justify-between p-6 border-t">
                 <Button variant="outline" onClick={currentStep === 1 ? () => setCurrentView("landing") : prevStep} className="gap-2">
                   <ArrowLeft className="w-4 h-4" />{currentStep === 1 ? "Volver" : "Anterior"}
@@ -1898,7 +1937,7 @@ function ConfigWizardPage({ setCurrentView, formData: externalFormData, setFormD
             </Card>
           </motion.div>
         </AnimatePresence>
-        
+
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="mt-6 text-center">
           <p className="text-sm text-muted-foreground">¿Dudas? Usa el chat de soporte o llámanos al <span className="font-medium">+34 900 123 456</span></p>
         </motion.div>
@@ -1917,7 +1956,7 @@ function TeamPage({ setCurrentView }: { setCurrentView: (v: ViewType) => void })
     { name: "Aria-7", role: "Digital Agent Lead", bio: "500+ conversaciones/día, 98% satisfacción.", email: "aria@finaipro.com", phone: "Auto", type: "bot", avatar: "A7" },
     { name: "Nexus-3", role: "Sales Bot", bio: "Cualificación leads 94% precisión.", email: "nexus@finaipro.com", phone: "Auto", type: "bot", avatar: "N3" },
   ];
-  
+
   return (
     <div className="pt-24 pb-20 px-4">
       <div className="max-w-7xl mx-auto">
@@ -2052,7 +2091,7 @@ const PRODUCT_CONTRACTS = {
 // Legal Page
 function LegalPage({ setCurrentView }: { setCurrentView: (v: ViewType) => void }) {
   const [selectedProduct, setSelectedProduct] = useState<string>("Startup");
-  
+
   return (
     <div className="pt-24 pb-20 px-4">
       <div className="max-w-5xl mx-auto">
@@ -2061,7 +2100,7 @@ function LegalPage({ setCurrentView }: { setCurrentView: (v: ViewType) => void }
           <h1 className="text-3xl sm:text-4xl font-bold mb-4">Aviso Legal, Términos y Condiciones</h1>
           <p className="text-muted-foreground">Última actualización: Enero 2024</p>
         </motion.div>
-        
+
         {/* Tabs for different sections */}
         <Tabs defaultValue="identificacion" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
@@ -2070,7 +2109,7 @@ function LegalPage({ setCurrentView }: { setCurrentView: (v: ViewType) => void }
             <TabsTrigger value="privacidad">Privacidad</TabsTrigger>
             <TabsTrigger value="condiciones">Condiciones</TabsTrigger>
           </TabsList>
-          
+
           {/* Tab 1: Identificación */}
           <TabsContent value="identificacion">
             <Card>
@@ -2094,7 +2133,7 @@ function LegalPage({ setCurrentView }: { setCurrentView: (v: ViewType) => void }
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           {/* Tab 2: Productos */}
           <TabsContent value="productos">
             <div className="space-y-6">
@@ -2111,7 +2150,7 @@ function LegalPage({ setCurrentView }: { setCurrentView: (v: ViewType) => void }
                   </Button>
                 ))}
               </div>
-              
+
               {/* Contract Details with Scroll */}
               <Card className="border-2 border-emerald-500/30">
                 <CardHeader className="bg-emerald-500/5">
@@ -2142,7 +2181,7 @@ function LegalPage({ setCurrentView }: { setCurrentView: (v: ViewType) => void }
                         ))}
                       </div>
                     </div>
-                    
+
                     {/* Condiciones */}
                     <div>
                       <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
@@ -2158,7 +2197,7 @@ function LegalPage({ setCurrentView }: { setCurrentView: (v: ViewType) => void }
                         ))}
                       </div>
                     </div>
-                    
+
                     {/* Cláusulas */}
                     <div>
                       <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
@@ -2205,7 +2244,7 @@ function LegalPage({ setCurrentView }: { setCurrentView: (v: ViewType) => void }
               </Card>
             </div>
           </TabsContent>
-          
+
           {/* Tab 3: Privacidad */}
           <TabsContent value="privacidad">
             <Card>
@@ -2221,7 +2260,7 @@ function LegalPage({ setCurrentView }: { setCurrentView: (v: ViewType) => void }
                     <h4 className="font-semibold text-foreground mb-2">1. Responsable del Tratamiento</h4>
                     <p>FinAI Pro, S.L., con NIF B-12345678, es responsable del tratamiento de los datos personales recogidos. Puede contactar con nuestro Delegado de Protección de Datos (DPO) en: dpo@finaipro.com</p>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-semibold text-foreground mb-2">2. Finalidades del Tratamiento</h4>
                     <ul className="list-disc pl-5 space-y-1">
@@ -2233,7 +2272,7 @@ function LegalPage({ setCurrentView }: { setCurrentView: (v: ViewType) => void }
                       <li>Gestión de incidencias y soporte técnico</li>
                     </ul>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-semibold text-foreground mb-2">3. Base Legal del Tratamiento</h4>
                     <ul className="list-disc pl-5 space-y-1">
@@ -2243,7 +2282,7 @@ function LegalPage({ setCurrentView }: { setCurrentView: (v: ViewType) => void }
                       <li>Cumplimiento de obligaciones legales (Art. 6.1.c RGPD)</li>
                     </ul>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-semibold text-foreground mb-2">4. Destinatarios de los Datos</h4>
                     <p>Los datos personales pueden ser comunicados a:</p>
@@ -2255,7 +2294,7 @@ function LegalPage({ setCurrentView }: { setCurrentView: (v: ViewType) => void }
                     </ul>
                     <p className="mt-2">No se realizan transferencias internacionales de datos fuera del Espacio Económico Europeo sin garantías adecuadas.</p>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-semibold text-foreground mb-2">5. Período de Conservación</h4>
                     <ul className="list-disc pl-5 space-y-1">
@@ -2266,7 +2305,7 @@ function LegalPage({ setCurrentView }: { setCurrentView: (v: ViewType) => void }
                       <li>Datos para IA: solo datos anonimizados de forma permanente</li>
                     </ul>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-semibold text-foreground mb-2">6. Derechos del Interesado</h4>
                     <p>El usuario tiene derecho a:</p>
@@ -2281,12 +2320,12 @@ function LegalPage({ setCurrentView }: { setCurrentView: (v: ViewType) => void }
                     </ul>
                     <p className="mt-2">Para ejercer estos derechos, envíe un email a dpo@finaipro.com con copia de su DNI.</p>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-semibold text-foreground mb-2">7. Agencia Española de Protección de Datos</h4>
                     <p>Si considera que el tratamiento de sus datos personales infringe la normativa, tiene derecho a presentar una reclamación ante la Agencia Española de Protección de Datos (www.aepd.es).</p>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-semibold text-foreground mb-2">8. Cookies</h4>
                     <p>Utilizamos cookies propias y de terceros para: garantizar el funcionamiento de la web, recordar preferencias, analizar el tráfico, y personalizar contenidos. Puede configurar su navegador para rechazar cookies.</p>
@@ -2295,7 +2334,7 @@ function LegalPage({ setCurrentView }: { setCurrentView: (v: ViewType) => void }
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           {/* Tab 4: Condiciones Generales */}
           <TabsContent value="condiciones">
             <Card>
@@ -2311,7 +2350,7 @@ function LegalPage({ setCurrentView }: { setCurrentView: (v: ViewType) => void }
                     <h4 className="font-semibold text-foreground mb-2">1. Objeto de los Servicios</h4>
                     <p>FinAI Pro proporciona servicios de inteligencia artificial, automatización de procesos, análisis de datos y desarrollo de agentes digitales para empresas del sector financiero. Los servicios incluyen, sin limitarse a: Data Analytics, ETL/OLAP, Agentes de IA, Machine Learning, RAG Systems, CRM Automation, Call Center AI y Trabajadores Digitales.</p>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-semibold text-foreground mb-2">2. Proceso de Contratación</h4>
                     <ul className="list-disc pl-5 space-y-1">
@@ -2321,7 +2360,7 @@ function LegalPage({ setCurrentView }: { setCurrentView: (v: ViewType) => void }
                       <li>Transcurrido el periodo de prueba, se formaliza el contrato</li>
                     </ul>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-semibold text-foreground mb-2">3. Periodo de Prueba</h4>
                     <ul className="list-disc pl-5 space-y-1">
@@ -2332,7 +2371,7 @@ function LegalPage({ setCurrentView }: { setCurrentView: (v: ViewType) => void }
                       <li>Acceso completo a funcionalidades del plan</li>
                     </ul>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-semibold text-foreground mb-2">4. Facturación y Pagos</h4>
                     <ul className="list-disc pl-5 space-y-1">
@@ -2343,7 +2382,7 @@ function LegalPage({ setCurrentView }: { setCurrentView: (v: ViewType) => void }
                       <li>Recargo de 5% por pagos fuera de plazo</li>
                     </ul>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-semibold text-foreground mb-2">5. Política de Cancelación</h4>
                     <ul className="list-disc pl-5 space-y-1">
@@ -2353,7 +2392,7 @@ function LegalPage({ setCurrentView }: { setCurrentView: (v: ViewType) => void }
                       <li>En planes con compromiso anual, posible penalización por cancelación anticipada</li>
                     </ul>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-semibold text-foreground mb-2">6. Nivel de Servicio (SLA)</h4>
                     <p>Garantizamos los siguientes niveles de disponibilidad según el plan contratado. En caso de incumplimiento:</p>
@@ -2363,7 +2402,7 @@ function LegalPage({ setCurrentView }: { setCurrentView: (v: ViewType) => void }
                       <li>&lt;90% SLA: Crédito del 30% de la factura mensual</li>
                     </ul>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-semibold text-foreground mb-2">7. Soporte Técnico</h4>
                     <ul className="list-disc pl-5 space-y-1">
@@ -2373,7 +2412,7 @@ function LegalPage({ setCurrentView }: { setCurrentView: (v: ViewType) => void }
                       <li>Documentación y base de conocimiento disponible para todos los planes</li>
                     </ul>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-semibold text-foreground mb-2">8. Actualización de Planes</h4>
                     <ul className="list-disc pl-5 space-y-1">
@@ -2382,12 +2421,12 @@ function LegalPage({ setCurrentView }: { setCurrentView: (v: ViewType) => void }
                       <li>Cambio de plan sin penalización (excepto compromiso anual)</li>
                     </ul>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-semibold text-foreground mb-2">9. Legislación Aplicable y Jurisdicción</h4>
                     <p>Las presentes condiciones se rigen por la legislación española. Para la resolución de controversias, las partes se someten a los Juzgados y Tribunales de Madrid, con renuncia expresa a cualquier otro fuero que pudiera corresponderles.</p>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-semibold text-foreground mb-2">10. Contacto</h4>
                     <p>Para cualquier consulta sobre estas condiciones:</p>
@@ -2402,7 +2441,7 @@ function LegalPage({ setCurrentView }: { setCurrentView: (v: ViewType) => void }
             </Card>
           </TabsContent>
         </Tabs>
-        
+
         <div className="mt-12 text-center"><Button variant="outline" onClick={() => setCurrentView("landing")} className="gap-2"><ArrowLeft className="w-4 h-4" />Volver a Inicio</Button></div>
       </div>
     </div>
@@ -2429,17 +2468,17 @@ function CallModal({ client, agent, onClose, onLogCall }: { client: any; agent: 
   const [duration, setDuration] = useState(0);
   const [notes, setNotes] = useState("");
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   const startCall = () => {
     setCallStatus("calling");
     setTimeout(() => setCallStatus("connected"), 2000);
   };
-  
+
   const endCall = () => {
     setCallStatus("ended");
     if (timerRef.current) clearInterval(timerRef.current);
   };
-  
+
   useEffect(() => {
     if (callStatus === "connected") {
       timerRef.current = setInterval(() => setDuration(d => d + 1), 1000);
@@ -2448,9 +2487,9 @@ function CallModal({ client, agent, onClose, onLogCall }: { client: any; agent: 
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [callStatus]);
-  
+
   const formatDuration = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
-  
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-background rounded-2xl p-6 max-w-sm w-full">
@@ -2462,14 +2501,14 @@ function CallModal({ client, agent, onClose, onLogCall }: { client: any; agent: 
           <p className="text-sm text-muted-foreground">{client.phone}</p>
           {agent && <Badge variant="outline" className="mt-1 text-xs">{agent.name}</Badge>}
         </div>
-        
+
         <div className="flex flex-col items-center gap-4">
           {callStatus === "idle" && (
             <Button size="lg" className="w-full bg-emerald-500 hover:bg-emerald-600 gap-2" onClick={startCall}>
               <Phone className="w-5 h-5" /> Iniciar Llamada
             </Button>
           )}
-          
+
           {callStatus === "calling" && (
             <div className="text-center">
               <div className="animate-pulse mb-2">
@@ -2478,7 +2517,7 @@ function CallModal({ client, agent, onClose, onLogCall }: { client: any; agent: 
               <p className="text-sm text-muted-foreground">Llamando...</p>
             </div>
           )}
-          
+
           {callStatus === "connected" && (
             <div className="text-center w-full">
               <div className="text-3xl font-mono font-bold text-emerald-500 mb-2">{formatDuration(duration)}</div>
@@ -2488,7 +2527,7 @@ function CallModal({ client, agent, onClose, onLogCall }: { client: any; agent: 
               </Button>
             </div>
           )}
-          
+
           {callStatus === "ended" && (
             <div className="w-full space-y-3">
               <div className="text-center text-muted-foreground">
@@ -2500,7 +2539,7 @@ function CallModal({ client, agent, onClose, onLogCall }: { client: any; agent: 
             </div>
           )}
         </div>
-        
+
         <Button variant="ghost" size="sm" className="w-full mt-4" onClick={onClose}>Cerrar</Button>
       </motion.div>
     </motion.div>
@@ -2512,7 +2551,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
   const [activeTab, setActiveTab] = useState("agentes");
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [chatMode, setChatMode] = useState<"single" | "group">("single");
-  const [chatMessages, setChatMessages] = useState<{role: string; content: string; agent?: string}[]>([
+  const [chatMessages, setChatMessages] = useState<{ role: string; content: string; agent?: string }[]>([
     { role: "assistant", content: "¡Hola! Soy tu asistente. ¿En qué puedo ayudarte?", agent: "Aria-7" }
   ]);
   const [newMessage, setNewMessage] = useState("");
@@ -2525,12 +2564,12 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
   const [sourceSearch, setSourceSearch] = useState("");
   const [newSource, setNewSource] = useState({ name: "", type: "url", url: "" });
   const chatEndRef = useRef<HTMLDivElement>(null);
-  
+
   // Chat resize and floating mode
   const [chatWidth, setChatWidth] = useState(340);
   const [chatFloating, setChatFloating] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
-  
+
   // Predictions state
   const [predictions, setPredictions] = useState([
     { id: 1, type: 'agente', source: 'Aria-7', prediction: 'Cliente Banco Santander probablemente renueva contrato en Q2', confidence: 87, date: 'Hoy', category: 'clientes' },
@@ -2541,7 +2580,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
     { id: 6, type: 'modelo', source: 'Clasificador de Clientes', prediction: 'CaixaBank clasificado como cliente premium potencial', confidence: 91, date: 'Hace 2 días', category: 'clientes' },
   ]);
   const [predictionFilter, setPredictionFilter] = useState({ type: 'todos', confidence: 'todos' });
-  
+
   // Automated tasks state
   const [autoTasks, setAutoTasks] = useState([
     { id: 1, task: 'Enviar email renovación a Banco Santander', type: 'email', status: 'pendiente', prediction: 'Cliente Banco Santander probablemente renueva contrato', agent: 'Aria-7', scheduled: 'Hoy 16:00', priority: 'alta' },
@@ -2551,7 +2590,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
     { id: 5, task: 'Contactar CaixaBank como cliente premium', type: 'email', status: 'pendiente', prediction: 'CaixaBank clasificado como cliente premium', agent: 'Nexus-3', scheduled: 'Viernes 10:00', priority: 'baja' },
   ]);
   const [taskFilter, setTaskFilter] = useState({ status: 'todos', type: 'todos' });
-  
+
   // Data sources table data (for spreadsheet view)
   const [dataSourceRows, setDataSourceRows] = useState([
     { id: 1, nombre: 'Expansión', tipo: 'RSS Feed', url: 'https://expansion.es/rss', estado: 'conectado', ultimaSync: 'Hace 5 min', registros: 12450, frecuencia: '15 min' },
@@ -2571,16 +2610,16 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
     { id: 'github', name: 'GitHub', status: 'pendiente', lastSync: 'Pendiente', actions: 0 },
     { id: 'jira', name: 'Jira', status: 'conectado', lastSync: 'Hace 10 min', actions: 67 },
   ]);
-  
+
   // Agent history modal state
   const [showAgentHistory, setShowAgentHistory] = useState(false);
   const [selectedAgentHistory, setSelectedAgentHistory] = useState<any>(null);
-  
+
   // Client detail modal state
   const [showClientDetail, setShowClientDetail] = useState(false);
   const [selectedClientDetail, setSelectedClientDetail] = useState<any>(null);
   const [clientSubTab, setClientSubTab] = useState<'clientes' | 'directivos'>('clientes');
-  
+
   // IBEX 35 Directors data
   const [ibexDirectors, setIbexDirectors] = useState([
     { id: 1, name: "Ana Botín", position: "Presidenta", company: "Banco Santander", portfolio: ["Santander", "Banco Sabadell", "Bankia"], photo: "AB", linkedin: "#", connections: 12 },
@@ -2592,27 +2631,27 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
     { id: 7, name: "Antonio Garamendi", position: "Presidente", company: "CEOE", portfolio: ["BBVA", "Iberdrola", "Inditex"], photo: "AG", linkedin: "#", connections: 20 },
     { id: 8, name: "Ignacio Galán", position: "Presidente", company: "Iberdrola", portfolio: ["Iberdrola", "Banco Santander", "Repsol"], photo: "IG", linkedin: "#", connections: 14 },
   ]);
-  
+
   // Analytics sub-tab state
   const [analyticsTab, setAnalyticsTab] = useState<'avanzadas' | 'mercado'>('avanzadas');
   const [selectedIbexCompany, setSelectedIbexCompany] = useState<string>('santander');
-  
+
   // Trading chart states
   const [crosshairPos, setCrosshairPos] = useState<{ x: number; y: number; visible: boolean; price: number; date: string }>({ x: 0, y: 0, visible: false, price: 0, date: '' });
   const [chartScrollOffset, setChartScrollOffset] = useState(0);
   const [selectedPrediction, setSelectedPrediction] = useState<any>(null);
   const chartContainerRef = useRef<HTMLDivElement>(null);
-  
+
   // Dynamic cursor state
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [cursorType, setCursorType] = useState<'default' | 'agent' | 'edit' | 'data' | 'action' | 'chat' | 'client'>('default');
-  
+
   // Animated progress bars - grow slowly at different rates
   const [leadScores, setLeadScores] = useState([0, 0, 0, 0, 0]);
   const [clonacionScores, setClonacionScores] = useState([0, 0, 0, 0]);
   const targetLeadScores = [92, 78, 85, 65, 88]; // Target scores for each client
   const targetClonacionScores = [94, 87, 91, 78]; // Target scores for each agent
-  
+
   // Animate lead scores slowly at different rates
   useEffect(() => {
     const intervals = targetLeadScores.map((target, i) => {
@@ -2629,7 +2668,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
     });
     return () => intervals.forEach(clearInterval);
   }, []);
-  
+
   // Animate clonacion scores slowly at different rates
   useEffect(() => {
     const intervals = targetClonacionScores.map((target, i) => {
@@ -2646,7 +2685,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
     });
     return () => intervals.forEach(clearInterval);
   }, []);
-  
+
   // Track mouse position globally
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -2655,27 +2694,27 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
-  
+
   // Generate 220 candles for realistic trading chart
   const generateCandles = (basePrice: number, volatility: number = 0.03): any[] => {
     const candles = [];
     let currentPrice = basePrice * 0.85; // Start 15% below current
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - 220);
-    
+
     for (let i = 0; i < 220; i++) {
       const date = new Date(startDate);
       date.setDate(date.getDate() + i);
-      
+
       // Skip weekends
       if (date.getDay() === 0 || date.getDay() === 6) continue;
-      
+
       const change = (Math.random() - 0.48) * volatility * currentPrice;
       const open = currentPrice;
       const close = currentPrice + change;
       const high = Math.max(open, close) + Math.random() * volatility * currentPrice * 0.5;
       const low = Math.min(open, close) - Math.random() * volatility * currentPrice * 0.5;
-      
+
       candles.push({
         date: date.toISOString().split('T')[0],
         open: parseFloat(open.toFixed(3)),
@@ -2684,13 +2723,13 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
         close: parseFloat(close.toFixed(3)),
         volume: Math.floor(Math.random() * 50000000) + 10000000
       });
-      
+
       currentPrice = close;
     }
-    
+
     return candles.slice(-220); // Ensure exactly 220 candles
   };
-  
+
   // IBEX 35 Companies data with 220 candles each
   const [ibexCompanies] = useState([
     { id: 'santander', name: 'Banco Santander', ticker: 'SAN', price: 4.52, change: +1.2, volume: '45.2M', candleData: generateCandles(4.52, 0.025) },
@@ -2702,7 +2741,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
     { id: 'inditex', name: 'Inditex', ticker: 'ITX', price: 48.92, change: +0.3, volume: '8.2M', candleData: generateCandles(48.92, 0.018) },
     { id: 'naturgy', name: 'Naturgy', ticker: 'NTGY', price: 24.35, change: -0.2, volume: '6.5M', candleData: generateCandles(24.35, 0.022) },
   ]);
-  
+
   // Market predictions with trading signals
   const [marketPredictions, setMarketPredictions] = useState([
     { id: 1, asset: 'SAN', company: 'Banco Santander', direction: 'long', entry: 4.50, takeProfit: 4.85, stopLoss: 4.32, current: 4.52, confidence: 78, status: 'activo', expiration: '7 días' },
@@ -2714,7 +2753,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
     { id: 7, asset: 'CABK', company: 'CaixaBank', direction: 'short', entry: 5.30, takeProfit: 4.95, stopLoss: 5.55, current: 5.23, confidence: 68, status: 'pendiente', expiration: '8 días' },
     { id: 8, asset: 'NTGY', company: 'Naturgy', direction: 'neutral', entry: 24.30, takeProfit: 25.50, stopLoss: 23.50, current: 24.35, confidence: 62, status: 'observacion', expiration: '15 días' },
   ]);
-  
+
   // Assets list
   const [assetsList, setAssetsList] = useState([
     { id: 1, ticker: 'SAN', name: 'Banco Santander', sector: 'Banca', price: 4.52, change: +1.2, marketCap: '67.2B', pe: 6.8 },
@@ -2726,7 +2765,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
     { id: 7, ticker: 'ITX', name: 'Inditex', sector: 'Retail', price: 48.92, change: +0.3, marketCap: '152B', pe: 24.2 },
     { id: 8, ticker: 'NTGY', name: 'Naturgy', sector: 'Energía', price: 24.35, change: -0.2, marketCap: '24.5B', pe: 11.8 },
   ]);
-  
+
   // Models state for ML training
   const [showAddModel, setShowAddModel] = useState(false);
   const [models, setModels] = useState([
@@ -2737,7 +2776,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
   const [newModel, setNewModel] = useState({
     name: "", type: "MLP", epochs: 100, inputLayers: 64, outputLayers: 1, optimizer: "Adam"
   });
-  
+
   // Clients enhanced state
   const [showAddClient, setShowAddClient] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
@@ -2747,10 +2786,10 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
   const [newClient, setNewClient] = useState({ name: "", email: "", phone: "", agent: "", phase: "nuevo", billing: 0 });
   const [emailContent, setEmailContent] = useState({ subject: "", body: "" });
   const [agentWritingEmail, setAgentWritingEmail] = useState(false);
-  
+
   // User agents state with full configuration
   const [userAgents, setUserAgents] = useState([
-    { 
+    {
       id: "agent-1", name: "Aria-7", role: "inversor", active: true, model: "Claude Sonnet 4.6",
       prompt: "Eres un agente especializado en análisis de inversiones y gestión de portfolio.",
       connections: ["salesforce", "bloomberg", "reuters"],
@@ -2759,7 +2798,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
       stats: { tasks: 847, success: 98, avgTime: "2.3s", satisfaction: 4.8, tokens: 245000, calls: 156, messages: 892, revenue: 12500 },
       weeklyData: [120, 145, 132, 178, 156, 45, 23]
     },
-    { 
+    {
       id: "agent-2", name: "Nexus-3", role: "marketing", active: true, model: "GPT 5.2",
       prompt: "Especialista en campañas de marketing digital y análisis de mercado.",
       connections: ["hubspot", "slack"],
@@ -2768,7 +2807,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
       stats: { tasks: 234, success: 94, avgTime: "3.1s", satisfaction: 4.6, tokens: 128000, calls: 45, messages: 567, revenue: 8200 },
       weeklyData: [80, 95, 88, 120, 100, 30, 15]
     },
-    { 
+    {
       id: "agent-3", name: "Oracle-1", role: "datos", active: true, model: "Gemini 3 Flash",
       prompt: "Analista de datos experto en reporting y business intelligence.",
       connections: ["notion", "aws"],
@@ -2777,7 +2816,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
       stats: { tasks: 156, success: 97, avgTime: "1.8s", satisfaction: 4.9, tokens: 312000, calls: 23, messages: 234, revenue: 9800 },
       weeklyData: [50, 65, 58, 85, 72, 20, 10]
     },
-    { 
+    {
       id: "agent-4", name: "Sentinel-2", role: "legal", active: false, model: "Claude Haiku 4.5",
       prompt: "Asesor legal especializado en cumplimiento normativo y contratos.",
       connections: [],
@@ -2786,7 +2825,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
       stats: { tasks: 89, success: 92, avgTime: "4.2s", satisfaction: 4.5, tokens: 67000, calls: 12, messages: 145, revenue: 3500 },
       weeklyData: [30, 35, 32, 45, 40, 10, 5]
     },
-    { 
+    {
       id: "agent-5", name: "FinBot-1", role: "finanzas", active: true, model: "Claude Opus 4.6",
       prompt: "Gestor financiero para presupuestos, análisis y planificación.",
       connections: ["salesforce", "jira"],
@@ -2796,16 +2835,17 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
       weeklyData: [100, 120, 110, 150, 130, 40, 20]
     },
   ]);
-  
+
   // New agent form
   const [newAgent, setNewAgent] = useState({
     name: "", role: "inversor", model: "Claude Sonnet 4.6", temperatura: 0.7, maxTokens: 4096, creatividad: "media",
     prompt: "", connections: [] as string[], dailyActions: 100
   });
-  
+
   // Clients data with phase and billing
   const [clients, setClients] = useState([
-    { id: 1, name: "Banco Santander", email: "contacto@santander.es", phone: "+34 912 345 678", agent: "agent-1", phase: "activo", billing: 15000,
+    {
+      id: 1, name: "Banco Santander", email: "contacto@santander.es", phone: "+34 912 345 678", agent: "agent-1", phase: "activo", billing: 15000,
       tags: ["VIP", "Enterprise"],
       interactions: [
         { type: "email", date: "Hoy 10:30", summary: "Enviado informe mensual de inversiones" },
@@ -2813,33 +2853,37 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
         { type: "email", date: "15 Ene", summary: "Propuesta de reestructuración" },
       ]
     },
-    { id: 2, name: "BBVA Asset Management", email: "assets@bbva.com", phone: "+34 915 678 901", agent: "agent-3", phase: "activo", billing: 8500,
+    {
+      id: 2, name: "BBVA Asset Management", email: "assets@bbva.com", phone: "+34 915 678 901", agent: "agent-3", phase: "activo", billing: 8500,
       tags: ["Prioritario", "Enterprise"],
       interactions: [
         { type: "call", date: "Hoy 09:00", summary: "Seguimiento trimestral" },
         { type: "email", date: "16 Ene", summary: "Análisis de riesgos" },
       ]
     },
-    { id: 3, name: "CaixaBank Inversiones", email: "inversiones@caixabank.es", phone: "+34 934 567 890", agent: "agent-5", phase: "prospeccion", billing: 0,
+    {
+      id: 3, name: "CaixaBank Inversiones", email: "inversiones@caixabank.es", phone: "+34 934 567 890", agent: "agent-5", phase: "prospeccion", billing: 0,
       tags: ["PyME"],
       interactions: [
         { type: "email", date: "17 Ene", summary: "Reporte de rendimiento" },
       ]
     },
-    { id: 4, name: "Sabadell Wealth", email: "wealth@sabadell.es", phone: "+34 935 678 901", agent: "agent-1", phase: "nuevo", billing: 0,
+    {
+      id: 4, name: "Sabadell Wealth", email: "wealth@sabadell.es", phone: "+34 935 678 901", agent: "agent-1", phase: "nuevo", billing: 0,
       tags: ["Prioritario"],
       interactions: [
         { type: "call", date: "Hoy 14:00", summary: "Primera llamada de contacto" },
       ]
     },
-    { id: 5, name: "Bankinter Institutional", email: "inst@bankinter.es", phone: "+34 915 123 456", agent: "agent-3", phase: "inactivo", billing: 5000,
+    {
+      id: 5, name: "Bankinter Institutional", email: "inst@bankinter.es", phone: "+34 915 123 456", agent: "agent-3", phase: "inactivo", billing: 5000,
       tags: ["VIP", "Enterprise", "Prioritario"],
       interactions: [
         { type: "email", date: "10 Ene", summary: "Última comunicación" },
       ]
     },
   ]);
-  
+
   // Data sources with delete capability
   const [dataSources, setDataSources] = useState([
     { id: 1, name: "Expansión", type: "RSS Feed", source: "https://expansion.es/rss", status: "connected", lastSync: "Hace 5 min", records: 12450 },
@@ -2848,7 +2892,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
     { id: 4, name: "Reuters", type: "RSS Feed", source: "https://reuters.com/rss", status: "connected", lastSync: "Hace 8 min", records: 34521 },
     { id: 5, name: "CRM Salesforce", type: "Base de Datos", source: "salesforce.com", status: "syncing", lastSync: "Sincronizando...", records: 12450 },
   ]);
-  
+
   // Mock competition data
   const competitors = [
     { id: 1, name: "FinTech Solutions S.A.", type: "Directo", threat: "high", products: ["CRM Financiero", "Analytics Pro"], news: 12, lastUpdate: "Hoy" },
@@ -2856,7 +2900,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
     { id: 3, name: "SmartBank Tech", type: "Indirecto", threat: "low", products: ["Banca Digital"], news: 3, lastUpdate: "Hace 3 días" },
     { id: 4, name: "InvestAnalytics", type: "Directo", threat: "high", products: ["Portfolio Manager", "Risk Analysis"], news: 15, lastUpdate: "Hoy" },
   ];
-  
+
   // Analytics data
   const analyticsData = [
     { name: "Lun", emails: 120, llamadas: 45, tareas: 89 },
@@ -2867,11 +2911,11 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
     { name: "Sáb", emails: 45, llamadas: 12, tareas: 30 },
     { name: "Dom", emails: 23, llamadas: 5, tareas: 15 },
   ];
-  
+
   const toggleAgentActive = (agentId: string) => {
     setUserAgents(prev => prev.map(a => a.id === agentId ? { ...a, active: !a.active } : a));
   };
-  
+
   const addNewAgent = () => {
     if (!newAgent.name.trim()) return;
     const agent = {
@@ -2886,22 +2930,22 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
     setNewAgent({ name: "", role: "inversor", model: "Claude Sonnet 4.6", temperatura: 0.7, maxTokens: 4096, creatividad: "media", prompt: "", connections: [], dailyActions: 100 });
     setShowAddAgent(false);
   };
-  
+
   const updateAgent = () => {
     if (!editingAgent) return;
     setUserAgents(prev => prev.map(a => a.id === editingAgent ? { ...a, ...newAgent } : a));
     setEditingAgent(null);
     setShowAddAgent(false);
   };
-  
+
   const deleteAgent = (agentId: string) => {
     setUserAgents(prev => prev.filter(a => a.id !== agentId));
   };
-  
+
   const deleteDataSource = (sourceId: number) => {
     setDataSources(prev => prev.filter(s => s.id !== sourceId));
   };
-  
+
   const addNewSource = () => {
     if (!newSource.name.trim() || !newSource.url.trim()) return;
     const source = {
@@ -2917,21 +2961,21 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
     setNewSource({ name: "", type: "url", url: "" });
     setShowAddSource(false);
   };
-  
+
   const handleSendMessage = () => {
     if (!newMessage.trim()) return;
     setChatMessages(prev => [...prev, { role: "user", content: newMessage }]);
     setNewMessage("");
     setTimeout(() => {
       const agent = selectedAgent ? userAgents.find(a => a.id === selectedAgent)?.name : "Aria-7";
-      setChatMessages(prev => [...prev, { 
-        role: "assistant", 
+      setChatMessages(prev => [...prev, {
+        role: "assistant",
         content: `Como ${agent}, he analizado tu solicitud. Basándome en los datos disponibles, te recomiendo revisar las métricas. ¿Necesitas más detalles?`,
         agent: agent
       }]);
     }, 1000);
   };
-  
+
   // Model handlers
   const addNewModel = () => {
     if (!newModel.name.trim()) return;
@@ -2951,18 +2995,18 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
     setNewModel({ name: "", type: "MLP", epochs: 100, inputLayers: 64, outputLayers: 1, optimizer: "Adam" });
     setShowAddModel(false);
   };
-  
+
   const deleteModel = (modelId: number) => {
     setModels(prev => prev.filter(m => m.id !== modelId));
   };
-  
+
   const trainModel = (modelId: number) => {
     setModels(prev => prev.map(m => m.id === modelId ? { ...m, status: "training", lastTrained: "Entrenando..." } : m));
     setTimeout(() => {
       setModels(prev => prev.map(m => m.id === modelId ? { ...m, status: "trained", accuracy: Math.round((Math.random() * 20 + 75) * 10) / 10, lastTrained: "Ahora" } : m));
     }, 3000);
   };
-  
+
   // Client handlers
   const addNewClient = () => {
     if (!newClient.name.trim() || !newClient.email.trim()) return;
@@ -2980,7 +3024,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
     setNewClient({ name: "", email: "", phone: "", agent: "", phase: "nuevo", billing: 0 });
     setShowAddClient(false);
   };
-  
+
   const getFilteredClients = () => {
     return clients.filter(c => {
       if (clientFilter.phase !== "todos" && c.phase !== clientFilter.phase) return false;
@@ -2990,18 +3034,18 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
       return true;
     });
   };
-  
+
   const handleEmailClient = (client: any) => {
     setSelectedClient(client);
     setEmailContent({ subject: ``, body: "" });
     setShowEmailModal(true);
   };
-  
+
   const handleCallClient = (client: any) => {
     setSelectedClient(client);
     setShowCallModal(true);
   };
-  
+
   const handleAgentWriteEmail = () => {
     setAgentWritingEmail(true);
     setTimeout(() => {
@@ -3013,7 +3057,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
       setAgentWritingEmail(false);
     }, 2000);
   };
-  
+
   const sendEmail = () => {
     if (selectedClient) {
       const newInteraction = { type: "email", date: "Ahora", summary: emailContent.subject || "Email enviado" };
@@ -3021,7 +3065,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
     }
     setShowEmailModal(false);
   };
-  
+
   const logCall = (notes: string) => {
     if (selectedClient) {
       const newInteraction = { type: "call", date: "Ahora", summary: notes || "Llamada realizada" };
@@ -3029,13 +3073,13 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
     }
     setShowCallModal(false);
   };
-  
+
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
-  
+
   const getRoleInfo = (roleId: string) => AGENT_ROLES.find(r => r.id === roleId) || AGENT_ROLES[0];
-  
+
   return (
     <div className="h-screen bg-muted/20 flex flex-col overflow-hidden">
       {/* Dashboard Header - Own Navbar */}
@@ -3043,13 +3087,13 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <button 
+              <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 className="lg:hidden p-2 hover:bg-muted rounded-lg"
               >
                 <Menu className="w-5 h-5" />
               </button>
-              <button 
+              <button
                 onClick={() => setCurrentView("landing")}
                 className="flex items-center gap-2"
               >
@@ -3064,19 +3108,18 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
                 </div>
               </button>
             </div>
-            
+
             {/* Cursor Type Indicator */}
             <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-full border">
-              <div className={`w-3 h-3 rounded-full ${
-                cursorType === 'default' ? 'bg-gray-500' :
+              <div className={`w-3 h-3 rounded-full ${cursorType === 'default' ? 'bg-gray-500' :
                 cursorType === 'agent' ? 'bg-emerald-500' :
-                cursorType === 'edit' ? 'bg-blue-500' :
-                cursorType === 'data' ? 'bg-purple-500' :
-                'bg-orange-500'
-              }`} />
+                  cursorType === 'edit' ? 'bg-blue-500' :
+                    cursorType === 'data' ? 'bg-purple-500' :
+                      'bg-orange-500'
+                }`} />
               <span className="text-xs text-muted-foreground capitalize">{cursorType}</span>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
                 <User className="w-4 h-4" />
@@ -3094,7 +3137,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
           </div>
         </div>
       </div>
-      
+
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
@@ -3114,18 +3157,17 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
               <button
                 key={tab.id}
                 onClick={() => { setActiveTab(tab.id); setCursorType(tab.cursor as any); }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-                  activeTab === tab.id 
-                    ? "bg-emerald-500/10 text-emerald-600 font-medium" 
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${activeTab === tab.id
+                  ? "bg-emerald-500/10 text-emerald-600 font-medium"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  }`}
               >
                 <tab.icon className="w-5 h-5" />
                 <span>{tab.label}</span>
               </button>
             ))}
           </div>
-          
+
           {/* Quick Stats */}
           <div className="p-4 border-t border-border">
             <h4 className="text-xs font-medium text-muted-foreground mb-3">RESUMEN</h4>
@@ -3149,2454 +3191,2436 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
             </div>
           </div>
         </aside>
-        
+
         {/* Main Panel */}
         <div className="flex-1 min-w-0 overflow-hidden">
           <ResizablePanelGroup direction="horizontal" className="h-full">
             {/* Content Area */}
             <ResizablePanel defaultSize={70} minSize={40} className="overflow-hidden">
               <div className="h-full overflow-y-auto p-6">
-              {/* Tab: Agentes */}
-              {activeTab === "agentes" && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h2 className="text-xl font-bold">Mis Agentes</h2>
-                      <p className="text-xs text-muted-foreground">{userAgents.length} agentes • {userAgents.filter((a: any) => a.active).length} activos</p>
-                    </div>
-                    <Button size="sm" className="gap-1 bg-emerald-500 hover:bg-emerald-600" onClick={() => { setEditingAgent(null); setNewAgent({ name: "", role: "inversor", model: "Claude Sonnet 4.6", temperatura: 0.7, maxTokens: 4096, creatividad: "media", prompt: "", connections: [], dailyActions: 100 }); setShowAddAgent(true); }}>
-                      <Plus className="w-4 h-4" /> Nuevo
-                    </Button>
-                  </div>
-                  
-                  {/* Add/Edit Agent Modal */}
-                  <AnimatePresence>
-                    {showAddAgent && (
-                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                        <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-background rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
-                          <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold">{editingAgent ? "Editar Agente" : "Crear Nuevo Agente"}</h3>
-                            <Button variant="ghost" size="sm" onClick={() => { setShowAddAgent(false); setEditingAgent(null); }}><X className="w-4 h-4" /></Button>
-                          </div>
-                          
-                          <div className="space-y-3">
-                            <div className="grid grid-cols-2 gap-3">
-                              <div>
-                                <Label className="text-xs">Nombre</Label>
-                                <Input value={newAgent.name} onChange={(e) => setNewAgent({...newAgent, name: e.target.value})} placeholder="FinBot-2" className="mt-1 h-9" />
-                              </div>
-                              <div>
-                                <Label className="text-xs">Rol del Agente</Label>
-                                <Select value={newAgent.role} onValueChange={(v) => setNewAgent({...newAgent, role: v})}>
-                                  <SelectTrigger className="mt-1 h-9"><SelectValue /></SelectTrigger>
-                                  <SelectContent>
-                                    {AGENT_ROLES.map((r: any) => {
-                                      const IconComponent = r.icon;
-                                      return (
-                                        <SelectItem key={r.id} value={r.id}>
-                                          <div className="flex items-center gap-2">
-                                            <IconComponent className="w-4 h-4 text-emerald-500" />
-                                            <span>{r.name}</span>
-                                          </div>
-                                        </SelectItem>
-                                      );
-                                    })}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
-                            
-                            {/* Role Preview */}
-                            <div className="p-3 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-lg border border-emerald-500/20">
-                              <div className="flex items-center gap-3">
-                                {(() => {
-                                  const selectedRole = AGENT_ROLES.find((r: any) => r.id === newAgent.role);
-                                  if (!selectedRole) return null;
-                                  const SelectedIcon = selectedRole.icon;
-                                  return (
-                                    <>
-                                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center border border-emerald-500/30">
-                                        <SelectedIcon className="w-5 h-5 text-emerald-500" />
-                                      </div>
-                                      <div>
-                                        <div className="font-medium text-sm">{selectedRole.name}</div>
-                                        <div className="text-xs text-muted-foreground">{selectedRole.description}</div>
-                                      </div>
-                                    </>
-                                  );
-                                })()}
-                              </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-3">
-                              <div>
-                                <Label className="text-xs">Modelo IA</Label>
-                                <Select value={newAgent.model} onValueChange={(v) => setNewAgent({...newAgent, model: v})}>
-                                  <SelectTrigger className="mt-1 h-9"><SelectValue /></SelectTrigger>
-                                  <SelectContent>{AI_MODELS.map((m: any) => <SelectItem key={m.id} value={m.name}>{m.name}</SelectItem>)}</SelectContent>
-                                </Select>
-                              </div>
-                              <div>
-                                <Label className="text-xs">Acciones/día: {newAgent.dailyActions}</Label>
-                                <Input type="number" value={newAgent.dailyActions} onChange={(e) => setNewAgent({...newAgent, dailyActions: parseInt(e.target.value) || 100})} className="mt-1 h-9" />
-                              </div>
-                            </div>
-                            
-                            <div>
-                              <Label className="text-xs">Prompt del Sistema</Label>
-                              <Textarea value={newAgent.prompt} onChange={(e) => setNewAgent({...newAgent, prompt: e.target.value})} placeholder="Define el comportamiento del agente..." className="mt-1 h-20 text-xs" />
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-3">
-                              <div>
-                                <Label className="text-xs">Temperatura: {newAgent.temperatura}</Label>
-                                <Slider value={[newAgent.temperatura]} onValueChange={(v) => setNewAgent({...newAgent, temperatura: v[0]})} min={0} max={1} step={0.1} className="mt-2" />
-                              </div>
-                              <div>
-                                <Label className="text-xs">Max Tokens</Label>
-                                <Select value={newAgent.maxTokens.toString()} onValueChange={(v) => setNewAgent({...newAgent, maxTokens: parseInt(v)})}>
-                                  <SelectTrigger className="mt-1 h-9"><SelectValue /></SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="2048">2,048</SelectItem>
-                                    <SelectItem value="4096">4,096</SelectItem>
-                                    <SelectItem value="8192">8,192</SelectItem>
-                                    <SelectItem value="16384">16,384</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
-                            
-                            <div>
-                              <Label className="text-xs">Conexiones a Servicios</Label>
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {MCP_INTEGRATIONS.slice(0, 10).map((tool: any) => (
-                                  <Badge key={tool.id} variant={newAgent.connections.includes(tool.id) ? "default" : "outline"} 
-                                    className={`cursor-pointer text-[10px] ${newAgent.connections.includes(tool.id) ? "bg-emerald-500" : ""}`}
-                                    onClick={() => {
-                                      const conns = newAgent.connections.includes(tool.id) 
-                                        ? newAgent.connections.filter((c: string) => c !== tool.id)
-                                        : [...newAgent.connections, tool.id];
-                                      setNewAgent({...newAgent, connections: conns});
-                                    }}>{tool.name}</Badge>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="flex gap-2 mt-4">
-                            <Button variant="outline" className="flex-1" onClick={() => { setShowAddAgent(false); setEditingAgent(null); }}>Cancelar</Button>
-                            <Button className="flex-1 bg-emerald-500 hover:bg-emerald-600" onClick={editingAgent ? updateAgent : addNewAgent}>{editingAgent ? "Guardar" : "Crear"}</Button>
-                          </div>
-                        </motion.div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                  
-                  {/* Agent Cards - Professional Column View */}
-                  <div className="space-y-3">
-                    {/* Header Stats */}
-                    <div className="grid grid-cols-4 gap-3 mb-4">
-                      <Card className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border-emerald-500/20">
-                        <CardContent className="p-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                              <Bot className="w-4 h-4 text-emerald-500" />
-                            </div>
-                            <div>
-                              <div className="text-lg font-bold">{userAgents.length}</div>
-                              <div className="text-[10px] text-muted-foreground">Total Agentes</div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                      <Card className="bg-gradient-to-br from-teal-500/10 to-cyan-500/10 border-teal-500/20">
-                        <CardContent className="p-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-teal-500/20 flex items-center justify-center">
-                              <Activity className="w-4 h-4 text-teal-500" />
-                            </div>
-                            <div>
-                              <div className="text-lg font-bold">{userAgents.filter((a: any) => a.active).length}</div>
-                              <div className="text-[10px] text-muted-foreground">Activos</div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                      <Card className="bg-gradient-to-br from-purple-500/10 to-violet-500/10 border-purple-500/20">
-                        <CardContent className="p-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                              <Zap className="w-4 h-4 text-purple-500" />
-                            </div>
-                            <div>
-                              <div className="text-lg font-bold">{userAgents.reduce((acc: number, a: any) => acc + a.stats.tasks, 0).toLocaleString()}</div>
-                              <div className="text-[10px] text-muted-foreground">Tareas</div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                      <Card className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border-yellow-500/20">
-                        <CardContent className="p-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center">
-                              <Star className="w-4 h-4 text-yellow-500" />
-                            </div>
-                            <div>
-                              <div className="text-lg font-bold">{(userAgents.reduce((acc: number, a: any) => acc + a.stats.satisfaction, 0) / userAgents.length).toFixed(1)}</div>
-                              <div className="text-[10px] text-muted-foreground">Satisfacción</div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                    
-                    {/* Agents Table */}
-                    <Card className="overflow-hidden">
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
-                          <thead>
-                            <tr className="bg-muted/50 border-b">
-                              <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Agente</th>
-                              <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Modelo</th>
-                              <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Estado</th>
-                              <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Clonación</th>
-                              <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Rendimiento</th>
-                              <th className="text-right px-4 py-3 text-xs font-medium text-muted-foreground">Acciones</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {userAgents.map((agent: any, i: number) => {
-                              const roleInfo = getRoleInfo(agent.role);
-                              const RoleIcon = roleInfo.icon;
-                              const clonacion = Math.round(clonacionScores[i] || 0);
-                              return (
-                                <tr key={agent.id} className={`border-b last:border-0 hover:bg-muted/30 transition-colors ${!agent.active ? 'opacity-60' : ''}`}>
-                                  <td className="px-4 py-3">
-                                    <div className="flex items-center gap-3">
-                                      {/* Role Icon */}
-                                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
-                                        agent.active 
-                                          ? 'bg-gradient-to-br from-emerald-500 to-teal-600' 
-                                          : 'bg-gradient-to-br from-gray-400 to-gray-500'
-                                      }`}>
-                                        <RoleIcon className="w-5 h-5 text-white" />
-                                      </div>
-                                      {/* Bot Icon + Name */}
-                                      <div className="flex items-center gap-2">
-                                        <div className={`w-7 h-7 rounded-full flex items-center justify-center ${
-                                          agent.active ? 'bg-emerald-500/20' : 'bg-gray-400/20'
-                                        }`}>
-                                          <Bot className={`w-4 h-4 ${agent.active ? 'text-emerald-500' : 'text-gray-500'}`} />
-                                        </div>
-                                        <div>
-                                          <div className="font-medium text-sm">{agent.name}</div>
-                                          <div className="text-[10px] text-muted-foreground">{roleInfo.name}</div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </td>
-                                  <td className="px-4 py-3">
-                                    <Badge variant="outline" className="text-[10px] font-mono">{agent.model.split(' ')[0]}</Badge>
-                                  </td>
-                                  <td className="px-4 py-3">
-                                    <Badge className={`text-[10px] ${agent.active ? 'bg-emerald-500' : 'bg-yellow-500'}`}>
-                                      <div className={`w-1.5 h-1.5 rounded-full mr-1 ${agent.active ? 'bg-white' : 'bg-white animate-pulse'}`} />
-                                      {agent.active ? 'Activo' : 'Aprendiendo'}
-                                    </Badge>
-                                  </td>
-                                  <td className="px-4 py-3">
-                                    <div className="flex items-center gap-2">
-                                      <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-                                        <div 
-                                          className={`h-full rounded-full ${clonacion >= 90 ? 'bg-emerald-500' : clonacion >= 80 ? 'bg-teal-500' : 'bg-yellow-500'}`}
-                                          style={{ width: `${clonacion}%` }}
-                                        />
-                                      </div>
-                                      <span className={`text-xs font-medium ${clonacion >= 90 ? 'text-emerald-500' : clonacion >= 80 ? 'text-teal-500' : 'text-yellow-500'}`}>
-                                        {clonacion}%
-                                      </span>
-                                    </div>
-                                  </td>
-                                  <td className="px-4 py-3">
-                                    <div className="flex items-center gap-3 text-[10px]">
-                                      <span className="flex items-center gap-1 text-emerald-500">
-                                        <Check className="w-3 h-3" />{agent.stats.success}%
-                                      </span>
-                                      <span className="flex items-center gap-1 text-teal-500">
-                                        <Clock className="w-3 h-3" />{agent.stats.avgTime}
-                                      </span>
-                                      <span className="flex items-center gap-1 text-yellow-500">
-                                        <Star className="w-3 h-3" />{agent.stats.satisfaction}
-                                      </span>
-                                      <span className="flex items-center gap-1 text-muted-foreground">
-                                        {agent.stats.tasks} tareas
-                                      </span>
-                                    </div>
-                                  </td>
-                                  <td className="px-4 py-3">
-                                    <div className="flex items-center justify-end gap-1">
-                                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
-                                        const a = userAgents.find((ag: any) => ag.id === agent.id);
-                                        if (a) {
-                                          setNewAgent({ name: a.name, role: a.role, model: a.model, temperatura: a.config.temperatura, maxTokens: a.config.maxTokens, creatividad: a.config.creatividad, prompt: a.prompt, connections: a.connections, dailyActions: a.dailyActions });
-                                          setEditingAgent(a.id);
-                                          setShowAddAgent(true);
-                                        }
-                                      }} title="Editar"><Edit className="w-3.5 h-3.5" /></Button>
-                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-emerald-500" onClick={() => setSelectedAgent(agent.id)} title="Chat"><MessageSquare className="w-3.5 h-3.5" /></Button>
-                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-500" onClick={() => { setSelectedAgentHistory(agent); setShowAgentHistory(true); }} title="Historial"><FileText className="w-3.5 h-3.5" /></Button>
-                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500 hover:text-red-600" onClick={() => deleteAgent(agent.id)} title="Eliminar"><Trash2 className="w-3.5 h-3.5" /></Button>
-                                    </div>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
+                {/* Tab: Agentes */}
+                {activeTab === "agentes" && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-xl font-bold">Mis Agentes</h2>
+                        <p className="text-xs text-muted-foreground">{userAgents.length} agentes • {userAgents.filter((a: any) => a.active).length} activos</p>
                       </div>
-                    </Card>
-                  </div>
-                  
-                  {/* Distribución por Área */}
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm flex items-center gap-2">
-                        <Bot className="w-4 h-4 text-emerald-500" />
-                        Distribución de Agentes por Área
-                      </CardTitle>
-                      <CardDescription>Ajusta la asignación de tus agentes digitales</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {AGENT_ROLES.slice(0, 5).map((role: any, i: number) => {
-                          // Static values that don't change on render
-                          const staticValues = [
-                            { count: 10, clonacion: 92 },
-                            { count: 8, clonacion: 87 },
-                            { count: 5, clonacion: 91 },
-                            { count: 3, clonacion: 78 },
-                            { count: 2, clonacion: 85 },
-                          ];
-                          const { count, clonacion: clonacionAvg } = staticValues[i] || { count: 1, clonacion: 75 };
-                          const IconComponent = role.icon;
-                          return (
-                            <div key={role.id} className="space-y-1">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <IconComponent className="w-4 h-4 text-emerald-500" />
-                                  <span className="text-sm font-medium">{role.name}</span>
-                                </div>
-                                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                  <span>Clonación: {clonacionAvg}%</span>
-                                  <span className="font-medium text-foreground">{count} agentes</span>
-                                </div>
-                              </div>
-                              <div className="flex gap-2">
-                                <Progress value={(count / 10) * 100} className="h-2 flex-1" />
-                                <Progress value={clonacionAvg} className="h-2 w-16" />
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                      
-                      <div className="mt-4 p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Sparkles className="w-4 h-4 text-emerald-500" />
-                          <span className="font-medium text-sm">Sugerencia IA</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          Basado en el análisis de ROI, se recomienda aumentar los agentes de Inversiones. ROI potencial: +15%.
-                        </p>
-                        <Button size="sm" className="mt-2 h-7 text-xs bg-emerald-500 hover:bg-emerald-600">
-                          Aplicar recomendación
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-              
-              {/* Tab: Modelos */}
-              {activeTab === "modelos" && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h2 className="text-xl font-bold">Modelos de ML</h2>
-                      <p className="text-xs text-muted-foreground">Entrena y gestiona modelos de machine learning</p>
+                      <Button size="sm" className="gap-1 bg-emerald-500 hover:bg-emerald-600" onClick={() => { setEditingAgent(null); setNewAgent({ name: "", role: "inversor", model: "Claude Sonnet 4.6", temperatura: 0.7, maxTokens: 4096, creatividad: "media", prompt: "", connections: [], dailyActions: 100 }); setShowAddAgent(true); }}>
+                        <Plus className="w-4 h-4" /> Nuevo
+                      </Button>
                     </div>
-                    <Button size="sm" className="gap-1 bg-emerald-500 hover:bg-emerald-600" onClick={() => setShowAddModel(true)}>
-                      <Plus className="w-4 h-4" /> Nuevo Modelo
-                    </Button>
-                  </div>
-                  
-                  {/* Add Model Modal */}
-                  <AnimatePresence>
-                    {showAddModel && (
-                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                        <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-background rounded-2xl p-6 max-w-md w-full">
-                          <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold">Nuevo Modelo de ML</h3>
-                            <Button variant="ghost" size="sm" onClick={() => setShowAddModel(false)}><X className="w-4 h-4" /></Button>
-                          </div>
-                          
-                          <div className="space-y-3">
-                            <div>
-                              <Label className="text-xs">Nombre del Modelo</Label>
-                              <Input value={newModel.name} onChange={(e) => setNewModel({...newModel, name: e.target.value})} placeholder="Predictor de Clientes v2" className="mt-1 h-9" />
+
+                    {/* Add/Edit Agent Modal */}
+                    <AnimatePresence>
+                      {showAddAgent && (
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                          <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-background rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+                            <div className="flex items-center justify-between mb-4">
+                              <h3 className="text-lg font-semibold">{editingAgent ? "Editar Agente" : "Crear Nuevo Agente"}</h3>
+                              <Button variant="ghost" size="sm" onClick={() => { setShowAddAgent(false); setEditingAgent(null); }}><X className="w-4 h-4" /></Button>
                             </div>
-                            
-                            <div>
-                              <Label className="text-xs">Tipo de Red Neuronal</Label>
-                              <Select value={newModel.type} onValueChange={(v) => setNewModel({...newModel, type: v})}>
-                                <SelectTrigger className="mt-1 h-9"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="MLP">MLP - Datos tabulares</SelectItem>
-                                  <SelectItem value="CNN">CNN - Imágenes</SelectItem>
-                                  <SelectItem value="RNN">RNN - Secuencias clásicas</SelectItem>
-                                  <SelectItem value="LSTM">LSTM - Series temporales</SelectItem>
-                                  <SelectItem value="Transformer">Transformer - Texto/LLM/Visión</SelectItem>
-                                  <SelectItem value="GAN">GAN - Generación realista</SelectItem>
-                                  <SelectItem value="Autoencoder">Autoencoder - Compresión</SelectItem>
-                                  <SelectItem value="GNN">GNN - Grafos</SelectItem>
-                                  <SelectItem value="Diffusion">Diffusion - Generación</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-3">
-                              <div>
-                                <Label className="text-xs">Epochs</Label>
-                                <Input type="number" value={newModel.epochs} onChange={(e) => setNewModel({...newModel, epochs: parseInt(e.target.value) || 100})} className="mt-1 h-9" />
-                              </div>
-                              <div>
-                                <Label className="text-xs">Optimizador</Label>
-                                <Select value={newModel.optimizer} onValueChange={(v) => setNewModel({...newModel, optimizer: v})}>
-                                  <SelectTrigger className="mt-1 h-9"><SelectValue /></SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="Adam">Adam</SelectItem>
-                                    <SelectItem value="AdamW">AdamW</SelectItem>
-                                    <SelectItem value="SGD">SGD</SelectItem>
-                                    <SelectItem value="RMSprop">RMSprop</SelectItem>
-                                    <SelectItem value="Adagrad">Adagrad</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-3">
-                              <div>
-                                <Label className="text-xs">Capas de Entrada</Label>
-                                <Input type="number" value={newModel.inputLayers} onChange={(e) => setNewModel({...newModel, inputLayers: parseInt(e.target.value) || 64})} className="mt-1 h-9" />
-                              </div>
-                              <div>
-                                <Label className="text-xs">Capas de Salida</Label>
-                                <Input type="number" value={newModel.outputLayers} onChange={(e) => setNewModel({...newModel, outputLayers: parseInt(e.target.value) || 1})} className="mt-1 h-9" />
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="flex gap-2 mt-4">
-                            <Button variant="outline" className="flex-1" onClick={() => setShowAddModel(false)}>Cancelar</Button>
-                            <Button className="flex-1 bg-emerald-500 hover:bg-emerald-600" onClick={addNewModel}>Crear</Button>
-                          </div>
-                        </motion.div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                  
-                  {/* Models Grid with Charts */}
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    {models.map((model: any) => {
-                      // Generate loss data for this model
-                      const lossData = Array.from({ length: 20 }, (_, i) => ({
-                        epoch: i * 5,
-                        loss: Math.exp(-i * 0.1) * 2 + 0.1 + Math.random() * 0.1
-                      }));
-                      
-                      return (
-                        <Card key={model.id} className="hover:border-purple-500/50 transition-colors overflow-hidden">
-                          <CardContent className="p-4">
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex items-center gap-2">
-                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                                  model.status === "trained" ? "bg-emerald-500/20" : 
-                                  model.status === "training" ? "bg-yellow-500/20" : "bg-muted"
-                                }`}>
-                                  <Brain className={`w-5 h-5 ${
-                                    model.status === "trained" ? "text-emerald-500" : 
-                                    model.status === "training" ? "text-yellow-500" : "text-muted-foreground"
-                                  }`} />
+
+                            <div className="space-y-3">
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <Label className="text-xs">Nombre</Label>
+                                  <Input value={newAgent.name} onChange={(e) => setNewAgent({ ...newAgent, name: e.target.value })} placeholder="FinBot-2" className="mt-1 h-9" />
                                 </div>
                                 <div>
-                                  <div className="font-medium">{model.name}</div>
-                                  <Badge variant="outline" className="text-[10px]">{model.type}</Badge>
+                                  <Label className="text-xs">Rol del Agente</Label>
+                                  <Select value={newAgent.role} onValueChange={(v) => setNewAgent({ ...newAgent, role: v })}>
+                                    <SelectTrigger className="mt-1 h-9"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                      {AGENT_ROLES.map((r: any) => {
+                                        const IconComponent = r.icon;
+                                        return (
+                                          <SelectItem key={r.id} value={r.id}>
+                                            <div className="flex items-center gap-2">
+                                              <IconComponent className="w-4 h-4 text-emerald-500" />
+                                              <span>{r.name}</span>
+                                            </div>
+                                          </SelectItem>
+                                        );
+                                      })}
+                                    </SelectContent>
+                                  </Select>
                                 </div>
                               </div>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={() => deleteModel(model.id)}>
-                                <Trash2 className="w-3 h-3" />
-                              </Button>
-                            </div>
-                            
-                            {/* Loss Chart */}
-                            <div className="mb-3">
-                              <div className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1">
-                                <TrendingDown className="w-3 h-3" /> Curva de Pérdida
+
+                              {/* Role Preview */}
+                              <div className="p-3 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-lg border border-emerald-500/20">
+                                <div className="flex items-center gap-3">
+                                  {(() => {
+                                    const selectedRole = AGENT_ROLES.find((r: any) => r.id === newAgent.role);
+                                    if (!selectedRole) return null;
+                                    const SelectedIcon = selectedRole.icon;
+                                    return (
+                                      <>
+                                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center border border-emerald-500/30">
+                                          <SelectedIcon className="w-5 h-5 text-emerald-500" />
+                                        </div>
+                                        <div>
+                                          <div className="font-medium text-sm">{selectedRole.name}</div>
+                                          <div className="text-xs text-muted-foreground">{selectedRole.description}</div>
+                                        </div>
+                                      </>
+                                    );
+                                  })()}
+                                </div>
                               </div>
-                              <div className="h-16 bg-muted/30 rounded-lg p-1 relative">
-                                <svg viewBox="0 0 100 40" className="w-full h-full">
-                                  <polyline
-                                    fill="none"
-                                    stroke="#ef4444"
-                                    strokeWidth="1.5"
-                                    points={lossData.map((d, i) => `${i * 5},${35 - (1.5 / d.loss) * 30}`).join(' ')}
-                                  />
-                                </svg>
+
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <Label className="text-xs">Modelo IA</Label>
+                                  <Select value={newAgent.model} onValueChange={(v) => setNewAgent({ ...newAgent, model: v })}>
+                                    <SelectTrigger className="mt-1 h-9"><SelectValue /></SelectTrigger>
+                                    <SelectContent>{AI_MODELS.map((m: any) => <SelectItem key={m.id} value={m.name}>{m.name}</SelectItem>)}</SelectContent>
+                                  </Select>
+                                </div>
+                                <div>
+                                  <Label className="text-xs">Acciones/día: {newAgent.dailyActions}</Label>
+                                  <Input type="number" value={newAgent.dailyActions} onChange={(e) => setNewAgent({ ...newAgent, dailyActions: parseInt(e.target.value) || 100 })} className="mt-1 h-9" />
+                                </div>
                               </div>
-                            </div>
-                            
-                            {/* Accuracy Gauge */}
-                            <div className="mb-3">
-                              <div className="text-[10px] text-muted-foreground mb-1">Accuracy</div>
-                              <div className="flex justify-center">
-                                <svg viewBox="0 0 120 70" className="w-32 h-20">
-                                  {/* Background arc */}
-                                  <path
-                                    d="M 10 60 A 50 50 0 0 1 110 60"
-                                    fill="none"
-                                    stroke="#27272a"
-                                    strokeWidth="10"
-                                    strokeLinecap="round"
-                                  />
-                                  {/* Colored arc based on accuracy */}
-                                  <path
-                                    d="M 10 60 A 50 50 0 0 1 110 60"
-                                    fill="none"
-                                    stroke={model.accuracy >= 90 ? "#10b981" : model.accuracy >= 70 ? "#eab308" : "#ef4444"}
-                                    strokeWidth="10"
-                                    strokeLinecap="round"
-                                    strokeDasharray={`${(model.accuracy || 0) * 1.57} 157`}
-                                  />
-                                  {/* Tick marks */}
-                                  {[0, 25, 50, 75, 100].map((tick, i) => (
-                                    <g key={i}>
-                                      <text x={10 + i * 25} y="68" textAnchor="middle" className="text-[6px]" fill="#71717a">{tick}</text>
-                                    </g>
+
+                              <div>
+                                <Label className="text-xs">Prompt del Sistema</Label>
+                                <Textarea value={newAgent.prompt} onChange={(e) => setNewAgent({ ...newAgent, prompt: e.target.value })} placeholder="Define el comportamiento del agente..." className="mt-1 h-20 text-xs" />
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <Label className="text-xs">Temperatura: {newAgent.temperatura}</Label>
+                                  <Slider value={[newAgent.temperatura]} onValueChange={(v) => setNewAgent({ ...newAgent, temperatura: v[0] })} min={0} max={1} step={0.1} className="mt-2" />
+                                </div>
+                                <div>
+                                  <Label className="text-xs">Max Tokens</Label>
+                                  <Select value={newAgent.maxTokens.toString()} onValueChange={(v) => setNewAgent({ ...newAgent, maxTokens: parseInt(v) })}>
+                                    <SelectTrigger className="mt-1 h-9"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="2048">2,048</SelectItem>
+                                      <SelectItem value="4096">4,096</SelectItem>
+                                      <SelectItem value="8192">8,192</SelectItem>
+                                      <SelectItem value="16384">16,384</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+
+                              <div>
+                                <Label className="text-xs">Conexiones a Servicios</Label>
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {MCP_INTEGRATIONS.slice(0, 10).map((tool: any) => (
+                                    <Badge key={tool.id} variant={newAgent.connections.includes(tool.id) ? "default" : "outline"}
+                                      className={`cursor-pointer text-[10px] ${newAgent.connections.includes(tool.id) ? "bg-emerald-500" : ""}`}
+                                      onClick={() => {
+                                        const conns = newAgent.connections.includes(tool.id)
+                                          ? newAgent.connections.filter((c: string) => c !== tool.id)
+                                          : [...newAgent.connections, tool.id];
+                                        setNewAgent({ ...newAgent, connections: conns });
+                                      }}>{tool.name}</Badge>
                                   ))}
-                                  {/* Needle */}
-                                  <g transform={`rotate(${((model.accuracy || 0) / 100) * 180 - 90} 60 60)`}>
-                                    <line x1="60" y1="60" x2="60" y2="20" stroke="white" strokeWidth="2" strokeLinecap="round" />
-                                    <circle cx="60" cy="60" r="4" fill="white" />
-                                  </g>
-                                  {/* Center value */}
-                                  <text x="60" y="50" textAnchor="middle" className="text-sm font-bold" fill="white" fontSize="14">
-                                    {model.accuracy || 0}%
-                                  </text>
-                                </svg>
+                                </div>
                               </div>
                             </div>
-                            
-                            <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-                              <div className="p-2 bg-muted/50 rounded">
-                                <div className="text-muted-foreground">Epochs</div>
-                                <div className="font-medium">{model.epochs}</div>
-                              </div>
-                              <div className="p-2 bg-muted/50 rounded">
-                                <div className="text-muted-foreground">Optimizador</div>
-                                <div className="font-medium">{model.optimizer}</div>
-                              </div>
+
+                            <div className="flex gap-2 mt-4">
+                              <Button variant="outline" className="flex-1" onClick={() => { setShowAddAgent(false); setEditingAgent(null); }}>Cancelar</Button>
+                              <Button className="flex-1 bg-emerald-500 hover:bg-emerald-600" onClick={editingAgent ? updateAgent : addNewAgent}>{editingAgent ? "Guardar" : "Crear"}</Button>
                             </div>
-                            
-                            <div className="flex items-center justify-between">
-                              <Badge variant="secondary" className={`text-[10px] ${
-                                model.status === "trained" ? "bg-emerald-500/10 text-emerald-500" : 
-                                model.status === "training" ? "bg-yellow-500/10 text-yellow-500" : ""
-                              }`}>
-                                {model.status === "trained" ? "Entrenado" : model.status === "training" ? "Entrenando..." : "Pendiente"}
-                              </Badge>
-                              <Button 
-                                size="sm" 
-                                className={`h-7 text-xs ${model.status === "training" ? "bg-yellow-500" : "bg-purple-500 hover:bg-purple-600"}`}
-                                disabled={model.status === "training"}
-                                onClick={() => trainModel(model.id)}
-                              >
-                                {model.status === "training" ? (
-                                  <><RefreshCw className="w-3 h-3 mr-1 animate-spin" /> Training...</>
-                                ) : (
-                                  <><Zap className="w-3 h-3 mr-1" /> Entrenar</>
-                                )}
-                              </Button>
+                          </motion.div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Agent Cards - Professional Column View */}
+                    <div className="space-y-3">
+                      {/* Header Stats */}
+                      <div className="grid grid-cols-4 gap-3 mb-4">
+                        <Card className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border-emerald-500/20">
+                          <CardContent className="p-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                                <Bot className="w-4 h-4 text-emerald-500" />
+                              </div>
+                              <div>
+                                <div className="text-lg font-bold">{userAgents.length}</div>
+                                <div className="text-[10px] text-muted-foreground">Total Agentes</div>
+                              </div>
                             </div>
                           </CardContent>
                         </Card>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-              
-              {/* Tab: Portfolio */}
-              {activeTab === "portfolio" && (
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h2 className="text-xl font-bold">Mi Portfolio</h2>
-                      <p className="text-xs text-muted-foreground">Gestiona tu portfolio de empresas</p>
-                    </div>
-                    <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500 mr-1 animate-pulse" />Live
-                    </Badge>
-                  </div>
-                  
-                  {/* Stats Cards */}
-                  <div className="grid sm:grid-cols-4 gap-4">
-                    <Card><CardContent className="p-4"><div className="text-2xl font-bold text-emerald-500">€2.4M</div><div className="text-sm text-muted-foreground">Valor Portfolio</div></CardContent></Card>
-                    <Card><CardContent className="p-4"><div className="text-2xl font-bold">4</div><div className="text-sm text-muted-foreground">Empresas Activas</div></CardContent></Card>
-                    <Card><CardContent className="p-4"><div className="text-2xl font-bold text-teal-500">28</div><div className="text-sm text-muted-foreground">Agentes Totales</div></CardContent></Card>
-                    <Card><CardContent className="p-4"><div className="text-2xl font-bold text-cyan-500">+23%</div><div className="text-sm text-muted-foreground">ROI Promedio</div></CardContent></Card>
-                  </div>
-                  
-                  <div className="grid lg:grid-cols-2 gap-6">
-                    {/* Evolution Chart */}
-                    <Card>
-                      <CardHeader><CardTitle className="text-base">Evolución del Portfolio</CardTitle></CardHeader>
-                      <CardContent>
-                        <ChartContainer config={{ valor: { label: "Valor", color: "#10b981" }, roi: { label: "ROI %", color: "#14b8a6" } }} className="h-64">
-                          <AreaChart data={[
-                            { name: "Ene", valor: 100, roi: 0 },
-                            { name: "Feb", valor: 105, roi: 5 },
-                            { name: "Mar", valor: 112, roi: 12 },
-                            { name: "Abr", valor: 118, roi: 18 },
-                            { name: "May", valor: 125, roi: 25 },
-                            { name: "Jun", valor: 134, roi: 34 },
-                          ]}>
-                            <XAxis dataKey="name" fontSize={10} />
-                            <YAxis fontSize={10} />
-                            <ChartTooltip content={<ChartTooltipContent />} />
-                            <Area type="monotone" dataKey="valor" stroke="#10b981" fill="#10b981" fillOpacity={0.2} />
-                          </AreaChart>
-                        </ChartContainer>
-                      </CardContent>
-                    </Card>
-                    
-                    {/* Distribution */}
-                    <Card>
-                      <CardHeader><CardTitle className="text-base">Distribución por Empresa</CardTitle></CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          {[
-                            { name: "FinTech Cobros S.L.", participacion: 25, agentes: 12, roi: "+34%", tendencia: "up", color: "#10b981" },
-                            { name: "CreditCards Pro", participacion: 18, agentes: 8, roi: "+22%", tendencia: "up", color: "#14b8a6" },
-                            { name: "InvestFund Management", participacion: 15, agentes: 5, roi: "+41%", tendencia: "up", color: "#06b6d4" },
-                            { name: "DebtRecovery AI", participacion: 10, agentes: 3, roi: "-5%", tendencia: "down", color: "#f59e0b" },
-                          ].map((empresa, i) => (
-                            <div key={i} className="flex items-center justify-between p-3 bg-muted/50 rounded-xl">
-                              <div className="flex items-center gap-3">
-                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: empresa.color }} />
-                                <div>
-                                  <div className="font-medium text-sm">{empresa.name}</div>
-                                  <div className="text-xs text-muted-foreground">{empresa.agentes} agentes</div>
-                                </div>
+                        <Card className="bg-gradient-to-br from-teal-500/10 to-cyan-500/10 border-teal-500/20">
+                          <CardContent className="p-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-lg bg-teal-500/20 flex items-center justify-center">
+                                <Activity className="w-4 h-4 text-teal-500" />
                               </div>
-                              <div className="flex items-center gap-4">
-                                <div className="text-right">
-                                  <div className="text-sm font-medium">{empresa.participacion}%</div>
-                                  <div className="text-xs text-muted-foreground">participación</div>
-                                </div>
-                                <div className={`flex items-center gap-1 ${empresa.tendencia === "up" ? "text-emerald-500" : "text-red-500"}`}>
-                                  {empresa.tendencia === "up" ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
-                                  <span className="text-sm font-medium">{empresa.roi}</span>
-                                </div>
+                              <div>
+                                <div className="text-lg font-bold">{userAgents.filter((a: any) => a.active).length}</div>
+                                <div className="text-[10px] text-muted-foreground">Activos</div>
                               </div>
                             </div>
-                          ))}
+                          </CardContent>
+                        </Card>
+                        <Card className="bg-gradient-to-br from-purple-500/10 to-violet-500/10 border-purple-500/20">
+                          <CardContent className="p-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                                <Zap className="w-4 h-4 text-purple-500" />
+                              </div>
+                              <div>
+                                <div className="text-lg font-bold">{userAgents.reduce((acc: number, a: any) => acc + a.stats.tasks, 0).toLocaleString()}</div>
+                                <div className="text-[10px] text-muted-foreground">Tareas</div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                        <Card className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border-yellow-500/20">
+                          <CardContent className="p-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+                                <Star className="w-4 h-4 text-yellow-500" />
+                              </div>
+                              <div>
+                                <div className="text-lg font-bold">{(userAgents.reduce((acc: number, a: any) => acc + a.stats.satisfaction, 0) / userAgents.length).toFixed(1)}</div>
+                                <div className="text-[10px] text-muted-foreground">Satisfacción</div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+
+                      {/* Agents Table */}
+                      <Card className="overflow-hidden">
+                        <div className="overflow-x-auto">
+                          <table className="w-full">
+                            <thead>
+                              <tr className="bg-muted/50 border-b">
+                                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Agente</th>
+                                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Modelo</th>
+                                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Estado</th>
+                                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Clonación</th>
+                                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Rendimiento</th>
+                                <th className="text-right px-4 py-3 text-xs font-medium text-muted-foreground">Acciones</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {userAgents.map((agent: any, i: number) => {
+                                const roleInfo = getRoleInfo(agent.role);
+                                const RoleIcon = roleInfo.icon;
+                                const clonacion = Math.round(clonacionScores[i] || 0);
+                                return (
+                                  <tr key={agent.id} className={`border-b last:border-0 hover:bg-muted/30 transition-colors ${!agent.active ? 'opacity-60' : ''}`}>
+                                    <td className="px-4 py-3">
+                                      <div className="flex items-center gap-3">
+                                        {/* Role Icon */}
+                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${agent.active
+                                          ? 'bg-gradient-to-br from-emerald-500 to-teal-600'
+                                          : 'bg-gradient-to-br from-gray-400 to-gray-500'
+                                          }`}>
+                                          <RoleIcon className="w-5 h-5 text-white" />
+                                        </div>
+                                        {/* Bot Icon + Name */}
+                                        <div className="flex items-center gap-2">
+                                          <div className={`w-7 h-7 rounded-full flex items-center justify-center ${agent.active ? 'bg-emerald-500/20' : 'bg-gray-400/20'
+                                            }`}>
+                                            <Bot className={`w-4 h-4 ${agent.active ? 'text-emerald-500' : 'text-gray-500'}`} />
+                                          </div>
+                                          <div>
+                                            <div className="font-medium text-sm">{agent.name}</div>
+                                            <div className="text-[10px] text-muted-foreground">{roleInfo.name}</div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                      <Badge variant="outline" className="text-[10px] font-mono">{agent.model.split(' ')[0]}</Badge>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                      <Badge className={`text-[10px] ${agent.active ? 'bg-emerald-500' : 'bg-yellow-500'}`}>
+                                        <div className={`w-1.5 h-1.5 rounded-full mr-1 ${agent.active ? 'bg-white' : 'bg-white animate-pulse'}`} />
+                                        {agent.active ? 'Activo' : 'Aprendiendo'}
+                                      </Badge>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                                          <div
+                                            className={`h-full rounded-full ${clonacion >= 90 ? 'bg-emerald-500' : clonacion >= 80 ? 'bg-teal-500' : 'bg-yellow-500'}`}
+                                            style={{ width: `${clonacion}%` }}
+                                          />
+                                        </div>
+                                        <span className={`text-xs font-medium ${clonacion >= 90 ? 'text-emerald-500' : clonacion >= 80 ? 'text-teal-500' : 'text-yellow-500'}`}>
+                                          {clonacion}%
+                                        </span>
+                                      </div>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                      <div className="flex items-center gap-3 text-[10px]">
+                                        <span className="flex items-center gap-1 text-emerald-500">
+                                          <Check className="w-3 h-3" />{agent.stats.success}%
+                                        </span>
+                                        <span className="flex items-center gap-1 text-teal-500">
+                                          <Clock className="w-3 h-3" />{agent.stats.avgTime}
+                                        </span>
+                                        <span className="flex items-center gap-1 text-yellow-500">
+                                          <Star className="w-3 h-3" />{agent.stats.satisfaction}
+                                        </span>
+                                        <span className="flex items-center gap-1 text-muted-foreground">
+                                          {agent.stats.tasks} tareas
+                                        </span>
+                                      </div>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                      <div className="flex items-center justify-end gap-1">
+                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
+                                          const a = userAgents.find((ag: any) => ag.id === agent.id);
+                                          if (a) {
+                                            setNewAgent({ name: a.name, role: a.role, model: a.model, temperatura: a.config.temperatura, maxTokens: a.config.maxTokens, creatividad: a.config.creatividad, prompt: a.prompt, connections: a.connections, dailyActions: a.dailyActions });
+                                            setEditingAgent(a.id);
+                                            setShowAddAgent(true);
+                                          }
+                                        }} title="Editar"><Edit className="w-3.5 h-3.5" /></Button>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-emerald-500" onClick={() => setSelectedAgent(agent.id)} title="Chat"><MessageSquare className="w-3.5 h-3.5" /></Button>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-500" onClick={() => { setSelectedAgentHistory(agent); setShowAgentHistory(true); }} title="Historial"><FileText className="w-3.5 h-3.5" /></Button>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500 hover:text-red-600" onClick={() => deleteAgent(agent.id)} title="Eliminar"><Trash2 className="w-3.5 h-3.5" /></Button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </Card>
+                    </div>
+
+                    {/* Distribución por Área */}
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <Bot className="w-4 h-4 text-emerald-500" />
+                          Distribución de Agentes por Área
+                        </CardTitle>
+                        <CardDescription>Ajusta la asignación de tus agentes digitales</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {AGENT_ROLES.slice(0, 5).map((role: any, i: number) => {
+                            // Static values that don't change on render
+                            const staticValues = [
+                              { count: 10, clonacion: 92 },
+                              { count: 8, clonacion: 87 },
+                              { count: 5, clonacion: 91 },
+                              { count: 3, clonacion: 78 },
+                              { count: 2, clonacion: 85 },
+                            ];
+                            const { count, clonacion: clonacionAvg } = staticValues[i] || { count: 1, clonacion: 75 };
+                            const IconComponent = role.icon;
+                            return (
+                              <div key={role.id} className="space-y-1">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <IconComponent className="w-4 h-4 text-emerald-500" />
+                                    <span className="text-sm font-medium">{role.name}</span>
+                                  </div>
+                                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                    <span>Clonación: {clonacionAvg}%</span>
+                                    <span className="font-medium text-foreground">{count} agentes</span>
+                                  </div>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Progress value={(count / 10) * 100} className="h-2 flex-1" />
+                                  <Progress value={clonacionAvg} className="h-2 w-16" />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        <div className="mt-4 p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Sparkles className="w-4 h-4 text-emerald-500" />
+                            <span className="font-medium text-sm">Sugerencia IA</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Basado en el análisis de ROI, se recomienda aumentar los agentes de Inversiones. ROI potencial: +15%.
+                          </p>
+                          <Button size="sm" className="mt-2 h-7 text-xs bg-emerald-500 hover:bg-emerald-600">
+                            Aplicar recomendación
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>
                   </div>
-                  
-                  {/* Suggestion */}
-                  <Card className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-emerald-500/20">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Sparkles className="w-4 h-4 text-emerald-500" />
-                        <span className="font-medium">Sugerencia de Rebalanceo</span>
+                )}
+
+                {/* Tab: Modelos */}
+                {activeTab === "modelos" && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-xl font-bold">Modelos de ML</h2>
+                        <p className="text-xs text-muted-foreground">Entrena y gestiona modelos de machine learning</p>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        Basado en el análisis de ROI, InvestFund muestra mejor rendimiento. 
-                        ¿Deseas aumentar la asignación de agentes?
-                      </p>
-                      <div className="flex gap-2 mt-3">
-                        <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600">Aplicar</Button>
-                        <Button size="sm" variant="outline">Ver Detalles</Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-              
-              {/* Tab: Clientes - Enhanced CRM */}
-              {activeTab === "clientes" && (
-                <div className="space-y-6" onMouseEnter={() => setCursorType('client')}>
-                  {/* Sub-tabs for Clientes and Directivos */}
-                  <div className="flex gap-2 border-b pb-2">
-                    <Button 
-                      variant={clientSubTab === 'clientes' ? 'default' : 'ghost'} 
-                      size="sm"
-                      className={`gap-2 ${clientSubTab === 'clientes' ? 'bg-emerald-500 hover:bg-emerald-600' : ''}`}
-                      onClick={() => setClientSubTab('clientes')}
-                    >
-                      <Users className="w-4 h-4" /> Clientes
-                    </Button>
-                    <Button 
-                      variant={clientSubTab === 'directivos' ? 'default' : 'ghost'} 
-                      size="sm"
-                      className={`gap-2 ${clientSubTab === 'directivos' ? 'bg-emerald-500 hover:bg-emerald-600' : ''}`}
-                      onClick={() => setClientSubTab('directivos')}
-                    >
-                      <Building className="w-4 h-4" /> Directivos IBEX 35
-                    </Button>
-                  </div>
-                  
-                  {/* Clientes Tab Content */}
-                  {clientSubTab === 'clientes' && (
-                    <>
-                      {/* MEJORA 1: Pipeline de Ventas Visual */}
-                      <Card className="bg-gradient-to-r from-emerald-500/5 to-teal-500/5">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm flex items-center gap-2">
-                            <TrendingUp className="w-4 h-4 text-emerald-500" />
-                            Pipeline de Ventas
-                          </CardTitle>
-                          <CardDescription>Visualiza el estado de todos tus clientes</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="grid grid-cols-4 gap-3">
-                            {[
-                              { phase: "nuevo", label: "Nuevos", count: clients.filter(c => c.phase === 'nuevo').length, color: "bg-blue-500", clients: clients.filter(c => c.phase === 'nuevo').slice(0, 2) },
-                              { phase: "prospeccion", label: "Prospección", count: clients.filter(c => c.phase === 'prospeccion').length, color: "bg-yellow-500", clients: clients.filter(c => c.phase === 'prospeccion').slice(0, 2) },
-                              { phase: "activo", label: "Activos", count: clients.filter(c => c.phase === 'activo').length, color: "bg-emerald-500", clients: clients.filter(c => c.phase === 'activo').slice(0, 2) },
-                              { phase: "inactivo", label: "Inactivos", count: clients.filter(c => c.phase === 'inactivo').length, color: "bg-gray-400", clients: clients.filter(c => c.phase === 'inactivo').slice(0, 2) },
-                            ].map((column, i) => (
-                              <div key={i} className="p-2 bg-muted/30 rounded-lg">
-                                <div className="flex items-center justify-between mb-2">
-                                  <span className="text-xs font-medium">{column.label}</span>
-                                  <Badge className={`text-[10px] ${column.color}`}>{column.count}</Badge>
+                      <Button size="sm" className="gap-1 bg-emerald-500 hover:bg-emerald-600" onClick={() => setShowAddModel(true)}>
+                        <Plus className="w-4 h-4" /> Nuevo Modelo
+                      </Button>
+                    </div>
+
+                    {/* Add Model Modal */}
+                    <AnimatePresence>
+                      {showAddModel && (
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                          <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-background rounded-2xl p-6 max-w-md w-full">
+                            <div className="flex items-center justify-between mb-4">
+                              <h3 className="text-lg font-semibold">Nuevo Modelo de ML</h3>
+                              <Button variant="ghost" size="sm" onClick={() => setShowAddModel(false)}><X className="w-4 h-4" /></Button>
+                            </div>
+
+                            <div className="space-y-3">
+                              <div>
+                                <Label className="text-xs">Nombre del Modelo</Label>
+                                <Input value={newModel.name} onChange={(e) => setNewModel({ ...newModel, name: e.target.value })} placeholder="Predictor de Clientes v2" className="mt-1 h-9" />
+                              </div>
+
+                              <div>
+                                <Label className="text-xs">Tipo de Red Neuronal</Label>
+                                <Select value={newModel.type} onValueChange={(v) => setNewModel({ ...newModel, type: v })}>
+                                  <SelectTrigger className="mt-1 h-9"><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="MLP">MLP - Datos tabulares</SelectItem>
+                                    <SelectItem value="CNN">CNN - Imágenes</SelectItem>
+                                    <SelectItem value="RNN">RNN - Secuencias clásicas</SelectItem>
+                                    <SelectItem value="LSTM">LSTM - Series temporales</SelectItem>
+                                    <SelectItem value="Transformer">Transformer - Texto/LLM/Visión</SelectItem>
+                                    <SelectItem value="GAN">GAN - Generación realista</SelectItem>
+                                    <SelectItem value="Autoencoder">Autoencoder - Compresión</SelectItem>
+                                    <SelectItem value="GNN">GNN - Grafos</SelectItem>
+                                    <SelectItem value="Diffusion">Diffusion - Generación</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <Label className="text-xs">Epochs</Label>
+                                  <Input type="number" value={newModel.epochs} onChange={(e) => setNewModel({ ...newModel, epochs: parseInt(e.target.value) || 100 })} className="mt-1 h-9" />
                                 </div>
-                                <div className="space-y-1">
-                                  {column.clients.map((client: any, j: number) => (
-                                    <div key={j} className="p-2 bg-background rounded border text-[10px] truncate hover:border-emerald-500/50 cursor-pointer">
-                                      {client.name}
-                                    </div>
-                                  ))}
-                                  {column.count === 0 && <div className="text-[10px] text-muted-foreground text-center py-2">Vacío</div>}
+                                <div>
+                                  <Label className="text-xs">Optimizador</Label>
+                                  <Select value={newModel.optimizer} onValueChange={(v) => setNewModel({ ...newModel, optimizer: v })}>
+                                    <SelectTrigger className="mt-1 h-9"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="Adam">Adam</SelectItem>
+                                      <SelectItem value="AdamW">AdamW</SelectItem>
+                                      <SelectItem value="SGD">SGD</SelectItem>
+                                      <SelectItem value="RMSprop">RMSprop</SelectItem>
+                                      <SelectItem value="Adagrad">Adagrad</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <Label className="text-xs">Capas de Entrada</Label>
+                                  <Input type="number" value={newModel.inputLayers} onChange={(e) => setNewModel({ ...newModel, inputLayers: parseInt(e.target.value) || 64 })} className="mt-1 h-9" />
+                                </div>
+                                <div>
+                                  <Label className="text-xs">Capas de Salida</Label>
+                                  <Input type="number" value={newModel.outputLayers} onChange={(e) => setNewModel({ ...newModel, outputLayers: parseInt(e.target.value) || 1 })} className="mt-1 h-9" />
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex gap-2 mt-4">
+                              <Button variant="outline" className="flex-1" onClick={() => setShowAddModel(false)}>Cancelar</Button>
+                              <Button className="flex-1 bg-emerald-500 hover:bg-emerald-600" onClick={addNewModel}>Crear</Button>
+                            </div>
+                          </motion.div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Models Grid with Charts */}
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      {models.map((model: any) => {
+                        // Generate loss data for this model
+                        const lossData = Array.from({ length: 20 }, (_, i) => ({
+                          epoch: i * 5,
+                          loss: Math.exp(-i * 0.1) * 2 + 0.1 + Math.random() * 0.1
+                        }));
+
+                        return (
+                          <Card key={model.id} className="hover:border-purple-500/50 transition-colors overflow-hidden">
+                            <CardContent className="p-4">
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${model.status === "trained" ? "bg-emerald-500/20" :
+                                    model.status === "training" ? "bg-yellow-500/20" : "bg-muted"
+                                    }`}>
+                                    <Brain className={`w-5 h-5 ${model.status === "trained" ? "text-emerald-500" :
+                                      model.status === "training" ? "text-yellow-500" : "text-muted-foreground"
+                                      }`} />
+                                  </div>
+                                  <div>
+                                    <div className="font-medium">{model.name}</div>
+                                    <Badge variant="outline" className="text-[10px]">{model.type}</Badge>
+                                  </div>
+                                </div>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={() => deleteModel(model.id)}>
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              </div>
+
+                              {/* Loss Chart */}
+                              <div className="mb-3">
+                                <div className="text-[10px] text-muted-foreground mb-1 flex items-center gap-1">
+                                  <TrendingDown className="w-3 h-3" /> Curva de Pérdida
+                                </div>
+                                <div className="h-16 bg-muted/30 rounded-lg p-1 relative">
+                                  <svg viewBox="0 0 100 40" className="w-full h-full">
+                                    <polyline
+                                      fill="none"
+                                      stroke="#ef4444"
+                                      strokeWidth="1.5"
+                                      points={lossData.map((d, i) => `${i * 5},${35 - (1.5 / d.loss) * 30}`).join(' ')}
+                                    />
+                                  </svg>
+                                </div>
+                              </div>
+
+                              {/* Accuracy Gauge */}
+                              <div className="mb-3">
+                                <div className="text-[10px] text-muted-foreground mb-1">Accuracy</div>
+                                <div className="flex justify-center">
+                                  <svg viewBox="0 0 120 70" className="w-32 h-20">
+                                    {/* Background arc */}
+                                    <path
+                                      d="M 10 60 A 50 50 0 0 1 110 60"
+                                      fill="none"
+                                      stroke="#27272a"
+                                      strokeWidth="10"
+                                      strokeLinecap="round"
+                                    />
+                                    {/* Colored arc based on accuracy */}
+                                    <path
+                                      d="M 10 60 A 50 50 0 0 1 110 60"
+                                      fill="none"
+                                      stroke={model.accuracy >= 90 ? "#10b981" : model.accuracy >= 70 ? "#eab308" : "#ef4444"}
+                                      strokeWidth="10"
+                                      strokeLinecap="round"
+                                      strokeDasharray={`${(model.accuracy || 0) * 1.57} 157`}
+                                    />
+                                    {/* Tick marks */}
+                                    {[0, 25, 50, 75, 100].map((tick, i) => (
+                                      <g key={i}>
+                                        <text x={10 + i * 25} y="68" textAnchor="middle" className="text-[6px]" fill="#71717a">{tick}</text>
+                                      </g>
+                                    ))}
+                                    {/* Needle */}
+                                    <g transform={`rotate(${((model.accuracy || 0) / 100) * 180 - 90} 60 60)`}>
+                                      <line x1="60" y1="60" x2="60" y2="20" stroke="white" strokeWidth="2" strokeLinecap="round" />
+                                      <circle cx="60" cy="60" r="4" fill="white" />
+                                    </g>
+                                    {/* Center value */}
+                                    <text x="60" y="50" textAnchor="middle" className="text-sm font-bold" fill="white" fontSize="14">
+                                      {model.accuracy || 0}%
+                                    </text>
+                                  </svg>
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+                                <div className="p-2 bg-muted/50 rounded">
+                                  <div className="text-muted-foreground">Epochs</div>
+                                  <div className="font-medium">{model.epochs}</div>
+                                </div>
+                                <div className="p-2 bg-muted/50 rounded">
+                                  <div className="text-muted-foreground">Optimizador</div>
+                                  <div className="font-medium">{model.optimizer}</div>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between">
+                                <Badge variant="secondary" className={`text-[10px] ${model.status === "trained" ? "bg-emerald-500/10 text-emerald-500" :
+                                  model.status === "training" ? "bg-yellow-500/10 text-yellow-500" : ""
+                                  }`}>
+                                  {model.status === "trained" ? "Entrenado" : model.status === "training" ? "Entrenando..." : "Pendiente"}
+                                </Badge>
+                                <Button
+                                  size="sm"
+                                  className={`h-7 text-xs ${model.status === "training" ? "bg-yellow-500" : "bg-purple-500 hover:bg-purple-600"}`}
+                                  disabled={model.status === "training"}
+                                  onClick={() => trainModel(model.id)}
+                                >
+                                  {model.status === "training" ? (
+                                    <><RefreshCw className="w-3 h-3 mr-1 animate-spin" /> Training...</>
+                                  ) : (
+                                    <><Zap className="w-3 h-3 mr-1" /> Entrenar</>
+                                  )}
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab: Portfolio */}
+                {activeTab === "portfolio" && (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-xl font-bold">Mi Portfolio</h2>
+                        <p className="text-xs text-muted-foreground">Gestiona tu portfolio de empresas</p>
+                      </div>
+                      <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 mr-1 animate-pulse" />Live
+                      </Badge>
+                    </div>
+
+                    {/* Stats Cards */}
+                    <div className="grid sm:grid-cols-4 gap-4">
+                      <Card><CardContent className="p-4"><div className="text-2xl font-bold text-emerald-500">€2.4M</div><div className="text-sm text-muted-foreground">Valor Portfolio</div></CardContent></Card>
+                      <Card><CardContent className="p-4"><div className="text-2xl font-bold">4</div><div className="text-sm text-muted-foreground">Empresas Activas</div></CardContent></Card>
+                      <Card><CardContent className="p-4"><div className="text-2xl font-bold text-teal-500">28</div><div className="text-sm text-muted-foreground">Agentes Totales</div></CardContent></Card>
+                      <Card><CardContent className="p-4"><div className="text-2xl font-bold text-cyan-500">+23%</div><div className="text-sm text-muted-foreground">ROI Promedio</div></CardContent></Card>
+                    </div>
+
+                    <div className="grid lg:grid-cols-2 gap-6">
+                      {/* Evolution Chart */}
+                      <Card>
+                        <CardHeader><CardTitle className="text-base">Evolución del Portfolio</CardTitle></CardHeader>
+                        <CardContent>
+                          <ChartContainer config={{ valor: { label: "Valor", color: "#10b981" }, roi: { label: "ROI %", color: "#14b8a6" } }} className="h-64">
+                            <AreaChart data={[
+                              { name: "Ene", valor: 100, roi: 0 },
+                              { name: "Feb", valor: 105, roi: 5 },
+                              { name: "Mar", valor: 112, roi: 12 },
+                              { name: "Abr", valor: 118, roi: 18 },
+                              { name: "May", valor: 125, roi: 25 },
+                              { name: "Jun", valor: 134, roi: 34 },
+                            ]}>
+                              <XAxis dataKey="name" fontSize={10} />
+                              <YAxis fontSize={10} />
+                              <ChartTooltip content={<ChartTooltipContent />} />
+                              <Area type="monotone" dataKey="valor" stroke="#10b981" fill="#10b981" fillOpacity={0.2} />
+                            </AreaChart>
+                          </ChartContainer>
+                        </CardContent>
+                      </Card>
+
+                      {/* Distribution */}
+                      <Card>
+                        <CardHeader><CardTitle className="text-base">Distribución por Empresa</CardTitle></CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            {[
+                              { name: "FinTech Cobros S.L.", participacion: 25, agentes: 12, roi: "+34%", tendencia: "up", color: "#10b981" },
+                              { name: "CreditCards Pro", participacion: 18, agentes: 8, roi: "+22%", tendencia: "up", color: "#14b8a6" },
+                              { name: "InvestFund Management", participacion: 15, agentes: 5, roi: "+41%", tendencia: "up", color: "#06b6d4" },
+                              { name: "DebtRecovery AI", participacion: 10, agentes: 3, roi: "-5%", tendencia: "down", color: "#f59e0b" },
+                            ].map((empresa, i) => (
+                              <div key={i} className="flex items-center justify-between p-3 bg-muted/50 rounded-xl">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: empresa.color }} />
+                                  <div>
+                                    <div className="font-medium text-sm">{empresa.name}</div>
+                                    <div className="text-xs text-muted-foreground">{empresa.agentes} agentes</div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                  <div className="text-right">
+                                    <div className="text-sm font-medium">{empresa.participacion}%</div>
+                                    <div className="text-xs text-muted-foreground">participación</div>
+                                  </div>
+                                  <div className={`flex items-center gap-1 ${empresa.tendencia === "up" ? "text-emerald-500" : "text-red-500"}`}>
+                                    {empresa.tendencia === "up" ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
+                                    <span className="text-sm font-medium">{empresa.roi}</span>
+                                  </div>
                                 </div>
                               </div>
                             ))}
                           </div>
                         </CardContent>
                       </Card>
-                      
-                      {/* MEJORA 2: Lead Scoring */}
-                      <div className="grid lg:grid-cols-2 gap-4">
-                        <Card>
+                    </div>
+
+                    {/* Suggestion */}
+                    <Card className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-emerald-500/20">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Sparkles className="w-4 h-4 text-emerald-500" />
+                          <span className="font-medium">Sugerencia de Rebalanceo</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Basado en el análisis de ROI, InvestFund muestra mejor rendimiento.
+                          ¿Deseas aumentar la asignación de agentes?
+                        </p>
+                        <div className="flex gap-2 mt-3">
+                          <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600">Aplicar</Button>
+                          <Button size="sm" variant="outline">Ver Detalles</Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+
+                {/* Tab: Clientes - Enhanced CRM */}
+                {activeTab === "clientes" && (
+                  <div className="space-y-6" onMouseEnter={() => setCursorType('client')}>
+                    {/* Sub-tabs for Clientes and Directivos */}
+                    <div className="flex gap-2 border-b pb-2">
+                      <Button
+                        variant={clientSubTab === 'clientes' ? 'default' : 'ghost'}
+                        size="sm"
+                        className={`gap-2 ${clientSubTab === 'clientes' ? 'bg-emerald-500 hover:bg-emerald-600' : ''}`}
+                        onClick={() => setClientSubTab('clientes')}
+                      >
+                        <Users className="w-4 h-4" /> Clientes
+                      </Button>
+                      <Button
+                        variant={clientSubTab === 'directivos' ? 'default' : 'ghost'}
+                        size="sm"
+                        className={`gap-2 ${clientSubTab === 'directivos' ? 'bg-emerald-500 hover:bg-emerald-600' : ''}`}
+                        onClick={() => setClientSubTab('directivos')}
+                      >
+                        <Building className="w-4 h-4" /> Directivos IBEX 35
+                      </Button>
+                    </div>
+
+                    {/* Clientes Tab Content */}
+                    {clientSubTab === 'clientes' && (
+                      <>
+                        {/* MEJORA 1: Pipeline de Ventas Visual */}
+                        <Card className="bg-gradient-to-r from-emerald-500/5 to-teal-500/5">
                           <CardHeader className="pb-2">
                             <CardTitle className="text-sm flex items-center gap-2">
-                              <Target className="w-4 h-4 text-purple-500" />
-                              Lead Scoring Automático
+                              <TrendingUp className="w-4 h-4 text-emerald-500" />
+                              Pipeline de Ventas
                             </CardTitle>
-                            <CardDescription>Priorización de clientes por potencial</CardDescription>
+                            <CardDescription>Visualiza el estado de todos tus clientes</CardDescription>
                           </CardHeader>
                           <CardContent>
-                            <div className="space-y-2">
-                              {clients.map((client: any, i: number) => {
-                                const score = Math.round(leadScores[i] || 0);
-                                return (
-                                  <div key={client.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                                    <div className="flex items-center gap-2">
-                                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold">
-                                        {client.name.charAt(0)}
-                                      </div>
-                                      <div>
-                                        <div className="text-sm font-medium">{client.name}</div>
-                                        <div className="text-[10px] text-muted-foreground">{client.phase}</div>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
-                                        <div 
-                                          className={`h-full rounded-full transition-all duration-300 ${score >= 80 ? 'bg-emerald-500' : score >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                                          style={{ width: `${score}%` }}
-                                        />
-                                      </div>
-                                      <span className={`text-xs font-bold ${score >= 80 ? 'text-emerald-500' : score >= 60 ? 'text-yellow-500' : 'text-red-500'}`}>{score}</span>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </CardContent>
-                        </Card>
-                        
-                        {/* MEJORA 3: Tareas Programadas */}
-                        <Card>
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-sm flex items-center gap-2">
-                              <Calendar className="w-4 h-4 text-orange-500" />
-                              Tareas Programadas
-                            </CardTitle>
-                            <CardDescription>Seguimiento de acciones pendientes</CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="space-y-2">
+                            <div className="grid grid-cols-4 gap-3">
                               {[
-                                { client: "Banco Santander", task: "Llamada seguimiento Q4", date: "Hoy 15:00", priority: "alta" },
-                                { client: "BBVA", task: "Enviar propuesta", date: "Mañana", priority: "media" },
-                                { client: "CaixaBank", task: "Reunión presencial", date: "Vie 10:00", priority: "alta" },
-                                { client: "Bankinter", task: "Email bienvenida", date: "Lun", priority: "baja" },
-                              ].map((tarea, i) => (
-                                <div key={i} className={`p-2 rounded-lg border-l-4 ${
-                                  tarea.priority === 'alta' ? 'border-l-red-500 bg-red-500/5' :
-                                  tarea.priority === 'media' ? 'border-l-yellow-500 bg-yellow-500/5' : 'border-l-gray-400 bg-muted/30'
-                                }`}>
-                                  <div className="flex items-center justify-between">
-                                    <div>
-                                      <div className="text-sm font-medium">{tarea.task}</div>
-                                      <div className="text-[10px] text-muted-foreground">{tarea.client}</div>
-                                    </div>
-                                    <div className="text-right">
-                                      <Badge variant="outline" className="text-[10px]">{tarea.date}</Badge>
-                                    </div>
+                                { phase: "nuevo", label: "Nuevos", count: clients.filter(c => c.phase === 'nuevo').length, color: "bg-blue-500", clients: clients.filter(c => c.phase === 'nuevo').slice(0, 2) },
+                                { phase: "prospeccion", label: "Prospección", count: clients.filter(c => c.phase === 'prospeccion').length, color: "bg-yellow-500", clients: clients.filter(c => c.phase === 'prospeccion').slice(0, 2) },
+                                { phase: "activo", label: "Activos", count: clients.filter(c => c.phase === 'activo').length, color: "bg-emerald-500", clients: clients.filter(c => c.phase === 'activo').slice(0, 2) },
+                                { phase: "inactivo", label: "Inactivos", count: clients.filter(c => c.phase === 'inactivo').length, color: "bg-gray-400", clients: clients.filter(c => c.phase === 'inactivo').slice(0, 2) },
+                              ].map((column, i) => (
+                                <div key={i} className="p-2 bg-muted/30 rounded-lg">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="text-xs font-medium">{column.label}</span>
+                                    <Badge className={`text-[10px] ${column.color}`}>{column.count}</Badge>
+                                  </div>
+                                  <div className="space-y-1">
+                                    {column.clients.map((client: any, j: number) => (
+                                      <div key={j} className="p-2 bg-background rounded border text-[10px] truncate hover:border-emerald-500/50 cursor-pointer">
+                                        {client.name}
+                                      </div>
+                                    ))}
+                                    {column.count === 0 && <div className="text-[10px] text-muted-foreground text-center py-2">Vacío</div>}
                                   </div>
                                 </div>
                               ))}
                             </div>
                           </CardContent>
                         </Card>
-                      </div>
-                      
-                      {/* Client List Header */}
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h2 className="text-xl font-bold">Listado de Clientes</h2>
-                          <p className="text-xs text-muted-foreground">{getFilteredClients().length} de {clients.length} clientes</p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Select value={clientFilter.phase} onValueChange={(v) => setClientFilter({...clientFilter, phase: v})}>
-                            <SelectTrigger className="w-[140px] h-8 text-xs">
-                              <Filter className="w-3 h-3 mr-1" />
-                              <SelectValue placeholder="Fase" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="todos">Todas las fases</SelectItem>
-                              <SelectItem value="nuevo">Nuevo Cliente</SelectItem>
-                              <SelectItem value="activo">Activo</SelectItem>
-                              <SelectItem value="prospeccion">En Prospección</SelectItem>
-                              <SelectItem value="inactivo">Inactivo</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <Button size="sm" className="gap-1 bg-emerald-500 hover:bg-emerald-600" onClick={() => setShowAddClient(true)}>
-                            <Plus className="w-4 h-4" /> Nuevo
-                          </Button>
-                        </div>
-                      </div>
-                      
-                      {/* Client Cards */}
-                      <div className="grid gap-3">
-                        {getFilteredClients().map((client: any) => {
-                          const assignedAgent = userAgents.find((a: any) => a.id === client.agent);
-                          const phaseColors: any = {
-                            nuevo: "bg-blue-500",
-                            activo: "bg-emerald-500",
-                            prospeccion: "bg-yellow-500",
-                            inactivo: "bg-gray-400"
-                          };
-                          return (
-                            <Card key={client.id} className="hover:shadow-md transition-all">
-                              <CardContent className="p-4">
-                                <div className="flex items-start justify-between mb-3">
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold">{client.name.charAt(0)}</div>
-                                    <div>
-                                      <div className="flex items-center gap-2 mb-1">
-                                        <h3 className="font-semibold">{client.name}</h3>
-                                        <Badge className={`text-[9px] ${phaseColors[client.phase] || "bg-gray-400"}`}>{client.phase}</Badge>
-                                      </div>
-                                      {/* MEJORA 5: Tags */}
-                                      <div className="flex flex-wrap gap-1 mb-1">
-                                        {(client.tags || []).map((tag: string, i: number) => (
-                                          <Badge key={i} variant="outline" className="text-[9px] h-4">{tag}</Badge>
-                                        ))}
-                                      </div>
-                                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                        <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{client.email}</span>
-                                        <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{client.phone}</span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className="text-right">
-                                    <div className="text-xs text-muted-foreground mb-1">Agente</div>
-                                    <Badge variant="outline" className="text-xs">{assignedAgent?.name || "Sin asignar"}</Badge>
-                                    {client.billing > 0 && (
-                                      <div className="text-xs text-emerald-500 mt-1 font-medium">€{client.billing.toLocaleString()}/mes</div>
-                                    )}
-                                  </div>
-                                </div>
-                                
-                                {/* MEJORA 4: Timeline de Interacciones */}
-                                <div className="border-t pt-3">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <h4 className="text-xs font-medium flex items-center gap-1">
-                                      <Clock className="w-3 h-3 text-muted-foreground" />
-                                      Historial de Interacciones
-                                    </h4>
-                                    <div className="flex gap-1">
-                                      <Button size="sm" variant="ghost" className="h-6 text-[10px] gap-1 text-purple-500" onClick={() => handleCallClient(client)}>
-                                        <Phone className="w-3 h-3" /> Llamar
-                                      </Button>
-                                      <Button size="sm" variant="outline" className="h-6 text-[10px] gap-1" onClick={() => handleEmailClient(client)}>
-                                        <Mail className="w-3 h-3" /> Email
-                                      </Button>
-                                      <Button size="sm" variant="outline" className="h-6 text-[10px] gap-1" onClick={() => { setSelectedClientDetail(client); setShowClientDetail(true); }}>
-                                        <Eye className="w-3 h-3" /> Ver
-                                      </Button>
-                                    </div>
-                                  </div>
-                                  
-                                  {/* Timeline Visual */}
-                                  <div className="relative pl-6">
-                                    <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-muted" />
-                                    {client.interactions.length > 0 ? client.interactions.slice(0, 3).map((interaction: any, i: number) => (
-                                      <div key={i} className="relative mb-2 last:mb-0">
-                                        <div className={`absolute -left-4 w-3 h-3 rounded-full border-2 border-background ${
-                                          interaction.type === "email" ? "bg-blue-500" : "bg-emerald-500"
-                                        }`} />
-                                        <div className="p-2 bg-muted/30 rounded-lg text-xs">
-                                          <div className="flex items-center justify-between mb-0.5">
-                                            <span className="font-medium">{interaction.type === "email" ? "Email" : "Llamada"}</span>
-                                            <span className="text-muted-foreground">{interaction.date}</span>
-                                          </div>
-                                          <p className="text-muted-foreground text-[10px]">{interaction.summary}</p>
+
+                        {/* MEJORA 2: Lead Scoring */}
+                        <div className="grid lg:grid-cols-2 gap-4">
+                          <Card>
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-sm flex items-center gap-2">
+                                <Target className="w-4 h-4 text-purple-500" />
+                                Lead Scoring Automático
+                              </CardTitle>
+                              <CardDescription>Priorización de clientes por potencial</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="space-y-2">
+                                {clients.map((client: any, i: number) => {
+                                  const score = Math.round(leadScores[i] || 0);
+                                  return (
+                                    <div key={client.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold">
+                                          {client.name.charAt(0)}
+                                        </div>
+                                        <div>
+                                          <div className="text-sm font-medium">{client.name}</div>
+                                          <div className="text-[10px] text-muted-foreground">{client.phase}</div>
                                         </div>
                                       </div>
-                                    )) : (
-                                      <div className="text-xs text-muted-foreground text-center py-2">Sin interacciones</div>
-                                    )}
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
+                                          <div
+                                            className={`h-full rounded-full transition-all duration-300 ${score >= 80 ? 'bg-emerald-500' : score >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                            style={{ width: `${score}%` }}
+                                          />
+                                        </div>
+                                        <span className={`text-xs font-bold ${score >= 80 ? 'text-emerald-500' : score >= 60 ? 'text-yellow-500' : 'text-red-500'}`}>{score}</span>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </CardContent>
+                          </Card>
+
+                          {/* MEJORA 3: Tareas Programadas */}
+                          <Card>
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-sm flex items-center gap-2">
+                                <Calendar className="w-4 h-4 text-orange-500" />
+                                Tareas Programadas
+                              </CardTitle>
+                              <CardDescription>Seguimiento de acciones pendientes</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="space-y-2">
+                                {[
+                                  { client: "Banco Santander", task: "Llamada seguimiento Q4", date: "Hoy 15:00", priority: "alta" },
+                                  { client: "BBVA", task: "Enviar propuesta", date: "Mañana", priority: "media" },
+                                  { client: "CaixaBank", task: "Reunión presencial", date: "Vie 10:00", priority: "alta" },
+                                  { client: "Bankinter", task: "Email bienvenida", date: "Lun", priority: "baja" },
+                                ].map((tarea, i) => (
+                                  <div key={i} className={`p-2 rounded-lg border-l-4 ${tarea.priority === 'alta' ? 'border-l-red-500 bg-red-500/5' :
+                                    tarea.priority === 'media' ? 'border-l-yellow-500 bg-yellow-500/5' : 'border-l-gray-400 bg-muted/30'
+                                    }`}>
+                                    <div className="flex items-center justify-between">
+                                      <div>
+                                        <div className="text-sm font-medium">{tarea.task}</div>
+                                        <div className="text-[10px] text-muted-foreground">{tarea.client}</div>
+                                      </div>
+                                      <div className="text-right">
+                                        <Badge variant="outline" className="text-[10px]">{tarea.date}</Badge>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </div>
+
+                        {/* Client List Header */}
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h2 className="text-xl font-bold">Listado de Clientes</h2>
+                            <p className="text-xs text-muted-foreground">{getFilteredClients().length} de {clients.length} clientes</p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Select value={clientFilter.phase} onValueChange={(v) => setClientFilter({ ...clientFilter, phase: v })}>
+                              <SelectTrigger className="w-[140px] h-8 text-xs">
+                                <Filter className="w-3 h-3 mr-1" />
+                                <SelectValue placeholder="Fase" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="todos">Todas las fases</SelectItem>
+                                <SelectItem value="nuevo">Nuevo Cliente</SelectItem>
+                                <SelectItem value="activo">Activo</SelectItem>
+                                <SelectItem value="prospeccion">En Prospección</SelectItem>
+                                <SelectItem value="inactivo">Inactivo</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button size="sm" className="gap-1 bg-emerald-500 hover:bg-emerald-600" onClick={() => setShowAddClient(true)}>
+                              <Plus className="w-4 h-4" /> Nuevo
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Client Cards */}
+                        <div className="grid gap-3">
+                          {getFilteredClients().map((client: any) => {
+                            const assignedAgent = userAgents.find((a: any) => a.id === client.agent);
+                            const phaseColors: any = {
+                              nuevo: "bg-blue-500",
+                              activo: "bg-emerald-500",
+                              prospeccion: "bg-yellow-500",
+                              inactivo: "bg-gray-400"
+                            };
+                            return (
+                              <Card key={client.id} className="hover:shadow-md transition-all">
+                                <CardContent className="p-4">
+                                  <div className="flex items-start justify-between mb-3">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold">{client.name.charAt(0)}</div>
+                                      <div>
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <h3 className="font-semibold">{client.name}</h3>
+                                          <Badge className={`text-[9px] ${phaseColors[client.phase] || "bg-gray-400"}`}>{client.phase}</Badge>
+                                        </div>
+                                        {/* MEJORA 5: Tags */}
+                                        <div className="flex flex-wrap gap-1 mb-1">
+                                          {(client.tags || []).map((tag: string, i: number) => (
+                                            <Badge key={i} variant="outline" className="text-[9px] h-4">{tag}</Badge>
+                                          ))}
+                                        </div>
+                                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                          <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{client.email}</span>
+                                          <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{client.phone}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="text-right">
+                                      <div className="text-xs text-muted-foreground mb-1">Agente</div>
+                                      <Badge variant="outline" className="text-xs">{assignedAgent?.name || "Sin asignar"}</Badge>
+                                      {client.billing > 0 && (
+                                        <div className="text-xs text-emerald-500 mt-1 font-medium">€{client.billing.toLocaleString()}/mes</div>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* MEJORA 4: Timeline de Interacciones */}
+                                  <div className="border-t pt-3">
+                                    <div className="flex items-center justify-between mb-2">
+                                      <h4 className="text-xs font-medium flex items-center gap-1">
+                                        <Clock className="w-3 h-3 text-muted-foreground" />
+                                        Historial de Interacciones
+                                      </h4>
+                                      <div className="flex gap-1">
+                                        <Button size="sm" variant="ghost" className="h-6 text-[10px] gap-1 text-purple-500" onClick={() => handleCallClient(client)}>
+                                          <Phone className="w-3 h-3" /> Llamar
+                                        </Button>
+                                        <Button size="sm" variant="outline" className="h-6 text-[10px] gap-1" onClick={() => handleEmailClient(client)}>
+                                          <Mail className="w-3 h-3" /> Email
+                                        </Button>
+                                        <Button size="sm" variant="outline" className="h-6 text-[10px] gap-1" onClick={() => { setSelectedClientDetail(client); setShowClientDetail(true); }}>
+                                          <Eye className="w-3 h-3" /> Ver
+                                        </Button>
+                                      </div>
+                                    </div>
+
+                                    {/* Timeline Visual */}
+                                    <div className="relative pl-6">
+                                      <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-muted" />
+                                      {client.interactions.length > 0 ? client.interactions.slice(0, 3).map((interaction: any, i: number) => (
+                                        <div key={i} className="relative mb-2 last:mb-0">
+                                          <div className={`absolute -left-4 w-3 h-3 rounded-full border-2 border-background ${interaction.type === "email" ? "bg-blue-500" : "bg-emerald-500"
+                                            }`} />
+                                          <div className="p-2 bg-muted/30 rounded-lg text-xs">
+                                            <div className="flex items-center justify-between mb-0.5">
+                                              <span className="font-medium">{interaction.type === "email" ? "Email" : "Llamada"}</span>
+                                              <span className="text-muted-foreground">{interaction.date}</span>
+                                            </div>
+                                            <p className="text-muted-foreground text-[10px]">{interaction.summary}</p>
+                                          </div>
+                                        </div>
+                                      )) : (
+                                        <div className="text-xs text-muted-foreground text-center py-2">Sin interacciones</div>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Quick Notes */}
+                                  <div className="mt-3 pt-3 border-t">
+                                    <div className="flex items-center gap-2">
+                                      <Input placeholder="Añadir nota rápida..." className="h-7 text-xs" />
+                                      <Button size="sm" variant="outline" className="h-7 shrink-0">Añadir</Button>
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+
+                    {/* Directivos IBEX 35 Tab Content */}
+                    {clientSubTab === 'directivos' && (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h2 className="text-xl font-bold">Directivos IBEX 35</h2>
+                            <p className="text-xs text-muted-foreground">Directivos y sus portfolios empresariales</p>
+                          </div>
+                          <Button size="sm" variant="outline" className="gap-1">
+                            <Download className="w-4 h-4" /> Exportar
+                          </Button>
+                        </div>
+
+                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {ibexDirectors.map((director) => (
+                            <Card key={director.id} className="hover:shadow-md transition-all">
+                              <CardContent className="p-4">
+                                <div className="flex items-start gap-3 mb-3">
+                                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-sm">
+                                    {director.photo}
+                                  </div>
+                                  <div className="flex-1">
+                                    <h3 className="font-semibold text-sm">{director.name}</h3>
+                                    <p className="text-xs text-muted-foreground">{director.position}</p>
+                                    <div className="flex items-center gap-1 mt-1">
+                                      <Building className="w-3 h-3 text-muted-foreground" />
+                                      <span className="text-xs font-medium">{director.company}</span>
+                                    </div>
                                   </div>
                                 </div>
-                                
-                                {/* Quick Notes */}
-                                <div className="mt-3 pt-3 border-t">
-                                  <div className="flex items-center gap-2">
-                                    <Input placeholder="Añadir nota rápida..." className="h-7 text-xs" />
-                                    <Button size="sm" variant="outline" className="h-7 shrink-0">Añadir</Button>
+
+                                <div className="space-y-2">
+                                  <div className="text-xs font-medium text-muted-foreground">Portfolio Empresarial:</div>
+                                  <div className="flex flex-wrap gap-1">
+                                    {director.portfolio.map((company, i) => (
+                                      <Badge key={i} variant="secondary" className="text-[10px]">{company}</Badge>
+                                    ))}
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center justify-between mt-3 pt-3 border-t">
+                                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                    <Users className="w-3 h-3" />
+                                    <span>{director.connections} conexiones</span>
+                                  </div>
+                                  <div className="flex gap-1">
+                                    <Button variant="ghost" size="icon" className="h-7 w-7">
+                                      <Linkedin className="w-3 h-3" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7">
+                                      <Mail className="w-3 h-3" />
+                                    </Button>
                                   </div>
                                 </div>
                               </CardContent>
                             </Card>
-                          );
-                        })}
-                      </div>
-                    </>
-                  )}
-                  
-                  {/* Directivos IBEX 35 Tab Content */}
-                  {clientSubTab === 'directivos' && (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h2 className="text-xl font-bold">Directivos IBEX 35</h2>
-                          <p className="text-xs text-muted-foreground">Directivos y sus portfolios empresariales</p>
+                          ))}
                         </div>
-                        <Button size="sm" variant="outline" className="gap-1">
-                          <Download className="w-4 h-4" /> Exportar
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Tab: Fuentes de Datos - With Sub-tabs */}
+                {activeTab === "fuentes" && (
+                  <div className="space-y-4" onMouseEnter={() => setCursorType('data')}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-xl font-bold">Fuentes de Datos</h2>
+                        <p className="text-xs text-muted-foreground">Gestiona integraciones y conexiones</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" className="gap-1">
+                          <RefreshCw className="w-4 h-4" /> Sincronizar Todo
                         </Button>
                       </div>
-                      
-                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {ibexDirectors.map((director) => (
-                          <Card key={director.id} className="hover:shadow-md transition-all">
+                    </div>
+
+                    {/* Sub-tabs for Tradicionales and MCP */}
+                    <div className="flex gap-2 border-b pb-2">
+                      <Button
+                        variant={sourceTab === 'tradicionales' ? 'default' : 'ghost'}
+                        size="sm"
+                        className={`gap-2 ${sourceTab === 'tradicionales' ? 'bg-emerald-500 hover:bg-emerald-600' : ''}`}
+                        onClick={() => setSourceTab('tradicionales')}
+                      >
+                        <Database className="w-4 h-4" /> Tradicionales
+                      </Button>
+                      <Button
+                        variant={sourceTab === 'mcp' ? 'default' : 'ghost'}
+                        size="sm"
+                        className={`gap-2 ${sourceTab === 'mcp' ? 'bg-emerald-500 hover:bg-emerald-600' : ''}`}
+                        onClick={() => setSourceTab('mcp')}
+                      >
+                        <Webhook className="w-4 h-4" /> MCP
+                      </Button>
+                    </div>
+
+                    {/* Tradicionales Tab Content */}
+                    {sourceTab === 'tradicionales' && (
+                      <div className="space-y-3">
+                        <div className="flex gap-2">
+                          <Button size="sm" className="gap-1 bg-emerald-500 hover:bg-emerald-600" onClick={() => {
+                            const newId = Math.max(...dataSourceRows.map(r => r.id)) + 1;
+                            setDataSourceRows([...dataSourceRows, { id: newId, nombre: '', tipo: 'API', url: '', estado: 'pendiente', ultimaSync: 'Nuevo', registros: 0, frecuencia: '30 min' }]);
+                          }}>
+                            <Plus className="w-4 h-4" /> Nueva Fuente
+                          </Button>
+                        </div>
+
+                        {/* Spreadsheet-style Table */}
+                        <Card className="overflow-hidden">
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                              <thead className="bg-muted/50 border-b">
+                                <tr>
+                                  <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground w-12">ID</th>
+                                  <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Nombre</th>
+                                  <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Tipo</th>
+                                  <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">URL / Conexión</th>
+                                  <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Estado</th>
+                                  <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Última Sync</th>
+                                  <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Registros</th>
+                                  <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground w-16">Acciones</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {dataSourceRows.map((row, idx) => (
+                                  <tr key={row.id} className={`border-b hover:bg-muted/30 ${idx % 2 === 0 ? 'bg-background' : 'bg-muted/10'}`}>
+                                    <td className="px-3 py-2 text-xs text-muted-foreground">{row.id}</td>
+                                    <td className="px-3 py-2">
+                                      <span className="cursor-text hover:bg-muted/50 px-1 py-0.5 rounded text-xs"
+                                        onClick={() => { setEditingCell({ rowId: row.id, field: 'nombre' }); setEditValue(row.nombre); }}
+                                      >{row.nombre || '-'}</span>
+                                    </td>
+                                    <td className="px-3 py-2">
+                                      <Badge variant="outline" className="text-[10px]">{row.tipo}</Badge>
+                                    </td>
+                                    <td className="px-3 py-2 text-xs truncate max-w-[150px]" title={row.url}>{row.url || '-'}</td>
+                                    <td className="px-3 py-2">
+                                      <Badge className={`text-[10px] ${row.estado === 'conectado' ? 'bg-emerald-500' : row.estado === 'sincronizando' ? 'bg-yellow-500' : 'bg-gray-400'}`}>
+                                        {row.estado}
+                                      </Badge>
+                                    </td>
+                                    <td className="px-3 py-2 text-xs text-muted-foreground">{row.ultimaSync}</td>
+                                    <td className="px-3 py-2 text-xs font-mono">{row.registros.toLocaleString()}</td>
+                                    <td className="px-3 py-2">
+                                      <div className="flex items-center gap-1">
+                                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                                          <RefreshCw className="w-3 h-3" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500" onClick={() => setDataSourceRows(dataSourceRows.filter(r => r.id !== row.id))}>
+                                          <Trash2 className="w-3 h-3" />
+                                        </Button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </Card>
+                      </div>
+                    )}
+
+                    {/* MCP Tab Content */}
+                    {sourceTab === 'mcp' && (
+                      <div className="space-y-3">
+                        <div className="flex gap-2">
+                          <Button size="sm" className="gap-1 bg-emerald-500 hover:bg-emerald-600">
+                            <Plus className="w-4 h-4" /> Añadir Integración MCP
+                          </Button>
+                        </div>
+
+                        {/* MCP Grid */}
+                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {MCP_INTEGRATIONS.map((mcp) => {
+                            const connected = mcpIntegrations.find(m => m.id === mcp.id);
+                            return (
+                              <Card key={mcp.id} className={`hover:shadow-md transition-all ${connected ? 'border-emerald-500/50' : 'opacity-70'}`}>
+                                <CardContent className="p-4">
+                                  <div className="flex items-start gap-3">
+                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${connected ? 'bg-emerald-500/20' : 'bg-muted'}`}>
+                                      <mcp.icon className={`w-5 h-5 ${connected ? 'text-emerald-500' : 'text-muted-foreground'}`} />
+                                    </div>
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2">
+                                        <h3 className="font-medium text-sm">{mcp.name}</h3>
+                                        {connected && (
+                                          <Badge className="bg-emerald-500 text-[9px]">Conectado</Badge>
+                                        )}
+                                      </div>
+                                      <p className="text-[10px] text-muted-foreground">{mcp.category}</p>
+                                      {connected && (
+                                        <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground">
+                                          <span>{connected.actions} acciones</span>
+                                          <span>•</span>
+                                          <span>{connected.lastSync}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="mt-3 flex gap-2">
+                                    {connected ? (
+                                      <>
+                                        <Button size="sm" variant="outline" className="flex-1 h-7 text-xs">Configurar</Button>
+                                        <Button size="sm" variant="ghost" className="h-7 text-xs text-red-500" onClick={() => setMcpIntegrations(mcpIntegrations.filter(m => m.id !== mcp.id))}>Desconectar</Button>
+                                      </>
+                                    ) : (
+                                      <Button size="sm" className="flex-1 h-7 text-xs bg-emerald-500 hover:bg-emerald-600" onClick={() => setMcpIntegrations([...mcpIntegrations, { id: mcp.id, name: mcp.name, status: 'conectado', lastSync: 'Ahora', actions: 0 }])}>Conectar</Button>
+                                    )}
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Quick Stats */}
+                    <div className="grid sm:grid-cols-4 gap-3">
+                      <Card className="p-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                            <Database className="w-4 h-4 text-emerald-500" />
+                          </div>
+                          <div>
+                            <div className="text-lg font-bold">{dataSourceRows.filter(r => r.estado === 'conectado').length}</div>
+                            <div className="text-[10px] text-muted-foreground">Tradicionales</div>
+                          </div>
+                        </div>
+                      </Card>
+                      <Card className="p-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                            <Webhook className="w-4 h-4 text-purple-500" />
+                          </div>
+                          <div>
+                            <div className="text-lg font-bold">{mcpIntegrations.length}</div>
+                            <div className="text-[10px] text-muted-foreground">MCP Activos</div>
+                          </div>
+                        </div>
+                      </Card>
+                      <Card className="p-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                            <Zap className="w-4 h-4 text-blue-500" />
+                          </div>
+                          <div>
+                            <div className="text-lg font-bold">{mcpIntegrations.reduce((acc, m) => acc + m.actions, 0)}</div>
+                            <div className="text-[10px] text-muted-foreground">Acciones MCP</div>
+                          </div>
+                        </div>
+                      </Card>
+                      <Card className="p-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+                            <RefreshCw className="w-4 h-4 text-yellow-500" />
+                          </div>
+                          <div>
+                            <div className="text-lg font-bold">{dataSourceRows.reduce((acc, r) => acc + r.registros, 0).toLocaleString()}</div>
+                            <div className="text-[10px] text-muted-foreground">Total Registros</div>
+                          </div>
+                        </div>
+                      </Card>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab: Predicciones */}
+                {activeTab === "predicciones" && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-xl font-bold">Predicciones</h2>
+                        <p className="text-xs text-muted-foreground">Análisis predictivo de agentes y modelos</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Select value={predictionFilter.type} onValueChange={(v) => setPredictionFilter({ ...predictionFilter, type: v })}>
+                          <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="Tipo" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="todos">Todos</SelectItem>
+                            <SelectItem value="agente">Por Agente</SelectItem>
+                            <SelectItem value="modelo">Por Modelo</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Select value={predictionFilter.confidence} onValueChange={(v) => setPredictionFilter({ ...predictionFilter, confidence: v })}>
+                          <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="Confianza" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="todos">Todas</SelectItem>
+                            <SelectItem value="alta">Alta (80%+)</SelectItem>
+                            <SelectItem value="media">Media (60-80%)</SelectItem>
+                            <SelectItem value="baja">Baja (&lt;60%)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {/* Prediction Cards */}
+                    <div className="space-y-3">
+                      {predictions
+                        .filter(p => {
+                          if (predictionFilter.type !== 'todos' && p.type !== predictionFilter.type) return false;
+                          if (predictionFilter.confidence === 'alta' && p.confidence < 80) return false;
+                          if (predictionFilter.confidence === 'media' && (p.confidence < 60 || p.confidence >= 80)) return false;
+                          if (predictionFilter.confidence === 'baja' && p.confidence >= 60) return false;
+                          return true;
+                        })
+                        .map((pred) => (
+                          <Card key={pred.id} className="hover:shadow-md transition-shadow">
                             <CardContent className="p-4">
-                              <div className="flex items-start gap-3 mb-3">
-                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-sm">
-                                  {director.photo}
+                              <div className="flex items-start gap-4">
+                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${pred.type === 'agente' ? 'bg-emerald-500/20' : 'bg-purple-500/20'
+                                  }`}>
+                                  {pred.type === 'agente' ? (
+                                    <Bot className={`w-6 h-6 text-emerald-500`} />
+                                  ) : (
+                                    <Brain className={`w-6 h-6 text-purple-500`} />
+                                  )}
                                 </div>
-                                <div className="flex-1">
-                                  <h3 className="font-semibold text-sm">{director.name}</h3>
-                                  <p className="text-xs text-muted-foreground">{director.position}</p>
-                                  <div className="flex items-center gap-1 mt-1">
-                                    <Building className="w-3 h-3 text-muted-foreground" />
-                                    <span className="text-xs font-medium">{director.company}</span>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <Badge variant="outline" className={`text-[10px] ${pred.type === 'agente' ? 'border-emerald-500 text-emerald-500' : 'border-purple-500 text-purple-500'
+                                      }`}>
+                                      {pred.type === 'agente' ? 'Agente' : 'Modelo'}
+                                    </Badge>
+                                    <span className="text-xs text-muted-foreground">{pred.source}</span>
+                                    <Badge variant="secondary" className="text-[10px] ml-auto">{pred.category}</Badge>
+                                  </div>
+                                  <p className="text-sm mb-2">{pred.prediction}</p>
+                                  <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-2">
+                                      <div className="text-xs text-muted-foreground">Confianza:</div>
+                                      <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                                        <div
+                                          className={`h-full rounded-full ${pred.confidence >= 80 ? 'bg-emerald-500' :
+                                            pred.confidence >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                                            }`}
+                                          style={{ width: `${pred.confidence}%` }}
+                                        />
+                                      </div>
+                                      <span className={`text-xs font-bold ${pred.confidence >= 80 ? 'text-emerald-500' :
+                                        pred.confidence >= 60 ? 'text-yellow-500' : 'text-red-500'
+                                        }`}>{pred.confidence}%</span>
+                                    </div>
+                                    <span className="text-xs text-muted-foreground">{pred.date}</span>
                                   </div>
                                 </div>
-                              </div>
-                              
-                              <div className="space-y-2">
-                                <div className="text-xs font-medium text-muted-foreground">Portfolio Empresarial:</div>
-                                <div className="flex flex-wrap gap-1">
-                                  {director.portfolio.map((company, i) => (
-                                    <Badge key={i} variant="secondary" className="text-[10px]">{company}</Badge>
-                                  ))}
-                                </div>
-                              </div>
-                              
-                              <div className="flex items-center justify-between mt-3 pt-3 border-t">
-                                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                  <Users className="w-3 h-3" />
-                                  <span>{director.connections} conexiones</span>
-                                </div>
-                                <div className="flex gap-1">
-                                  <Button variant="ghost" size="icon" className="h-7 w-7">
-                                    <Linkedin className="w-3 h-3" />
+                                <div className="flex flex-col gap-1">
+                                  <Button size="sm" variant="outline" className="h-7 text-xs gap-1">
+                                    <Zap className="w-3 h-3" /> Crear Tarea
                                   </Button>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7">
-                                    <Mail className="w-3 h-3" />
+                                  <Button size="sm" variant="ghost" className="h-7 text-xs">
+                                    Ver Detalles
                                   </Button>
                                 </div>
                               </div>
                             </CardContent>
                           </Card>
                         ))}
-                      </div>
                     </div>
-                  )}
-                </div>
-              )}
-              
-              {/* Tab: Fuentes de Datos - With Sub-tabs */}
-              {activeTab === "fuentes" && (
-                <div className="space-y-4" onMouseEnter={() => setCursorType('data')}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h2 className="text-xl font-bold">Fuentes de Datos</h2>
-                      <p className="text-xs text-muted-foreground">Gestiona integraciones y conexiones</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="gap-1">
-                        <RefreshCw className="w-4 h-4" /> Sincronizar Todo
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  {/* Sub-tabs for Tradicionales and MCP */}
-                  <div className="flex gap-2 border-b pb-2">
-                    <Button 
-                      variant={sourceTab === 'tradicionales' ? 'default' : 'ghost'} 
-                      size="sm"
-                      className={`gap-2 ${sourceTab === 'tradicionales' ? 'bg-emerald-500 hover:bg-emerald-600' : ''}`}
-                      onClick={() => setSourceTab('tradicionales')}
-                    >
-                      <Database className="w-4 h-4" /> Tradicionales
-                    </Button>
-                    <Button 
-                      variant={sourceTab === 'mcp' ? 'default' : 'ghost'} 
-                      size="sm"
-                      className={`gap-2 ${sourceTab === 'mcp' ? 'bg-emerald-500 hover:bg-emerald-600' : ''}`}
-                      onClick={() => setSourceTab('mcp')}
-                    >
-                      <Webhook className="w-4 h-4" /> MCP
-                    </Button>
-                  </div>
-                  
-                  {/* Tradicionales Tab Content */}
-                  {sourceTab === 'tradicionales' && (
-                    <div className="space-y-3">
-                      <div className="flex gap-2">
-                        <Button size="sm" className="gap-1 bg-emerald-500 hover:bg-emerald-600" onClick={() => {
-                          const newId = Math.max(...dataSourceRows.map(r => r.id)) + 1;
-                          setDataSourceRows([...dataSourceRows, { id: newId, nombre: '', tipo: 'API', url: '', estado: 'pendiente', ultimaSync: 'Nuevo', registros: 0, frecuencia: '30 min' }]);
-                        }}>
-                          <Plus className="w-4 h-4" /> Nueva Fuente
-                        </Button>
-                      </div>
-                      
-                      {/* Spreadsheet-style Table */}
-                      <Card className="overflow-hidden">
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-sm">
-                            <thead className="bg-muted/50 border-b">
-                              <tr>
-                                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground w-12">ID</th>
-                                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Nombre</th>
-                                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Tipo</th>
-                                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">URL / Conexión</th>
-                                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Estado</th>
-                                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Última Sync</th>
-                                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Registros</th>
-                                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground w-16">Acciones</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {dataSourceRows.map((row, idx) => (
-                                <tr key={row.id} className={`border-b hover:bg-muted/30 ${idx % 2 === 0 ? 'bg-background' : 'bg-muted/10'}`}>
-                                  <td className="px-3 py-2 text-xs text-muted-foreground">{row.id}</td>
-                                  <td className="px-3 py-2">
-                                    <span className="cursor-text hover:bg-muted/50 px-1 py-0.5 rounded text-xs"
-                                      onClick={() => { setEditingCell({ rowId: row.id, field: 'nombre' }); setEditValue(row.nombre); }}
-                                    >{row.nombre || '-'}</span>
-                                  </td>
-                                  <td className="px-3 py-2">
-                                    <Badge variant="outline" className="text-[10px]">{row.tipo}</Badge>
-                                  </td>
-                                  <td className="px-3 py-2 text-xs truncate max-w-[150px]" title={row.url}>{row.url || '-'}</td>
-                                  <td className="px-3 py-2">
-                                    <Badge className={`text-[10px] ${row.estado === 'conectado' ? 'bg-emerald-500' : row.estado === 'sincronizando' ? 'bg-yellow-500' : 'bg-gray-400'}`}>
-                                      {row.estado}
-                                    </Badge>
-                                  </td>
-                                  <td className="px-3 py-2 text-xs text-muted-foreground">{row.ultimaSync}</td>
-                                  <td className="px-3 py-2 text-xs font-mono">{row.registros.toLocaleString()}</td>
-                                  <td className="px-3 py-2">
-                                    <div className="flex items-center gap-1">
-                                      <Button variant="ghost" size="icon" className="h-6 w-6">
-                                        <RefreshCw className="w-3 h-3" />
-                                      </Button>
-                                      <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500" onClick={() => setDataSourceRows(dataSourceRows.filter(r => r.id !== row.id))}>
-                                        <Trash2 className="w-3 h-3" />
-                                      </Button>
-                                    </div>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </Card>
-                    </div>
-                  )}
-                  
-                  {/* MCP Tab Content */}
-                  {sourceTab === 'mcp' && (
-                    <div className="space-y-3">
-                      <div className="flex gap-2">
-                        <Button size="sm" className="gap-1 bg-emerald-500 hover:bg-emerald-600">
-                          <Plus className="w-4 h-4" /> Añadir Integración MCP
-                        </Button>
-                      </div>
-                      
-                      {/* MCP Grid */}
-                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {MCP_INTEGRATIONS.map((mcp) => {
-                          const connected = mcpIntegrations.find(m => m.id === mcp.id);
-                          return (
-                            <Card key={mcp.id} className={`hover:shadow-md transition-all ${connected ? 'border-emerald-500/50' : 'opacity-70'}`}>
-                              <CardContent className="p-4">
-                                <div className="flex items-start gap-3">
-                                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${connected ? 'bg-emerald-500/20' : 'bg-muted'}`}>
-                                    <mcp.icon className={`w-5 h-5 ${connected ? 'text-emerald-500' : 'text-muted-foreground'}`} />
-                                  </div>
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2">
-                                      <h3 className="font-medium text-sm">{mcp.name}</h3>
-                                      {connected && (
-                                        <Badge className="bg-emerald-500 text-[9px]">Conectado</Badge>
-                                      )}
-                                    </div>
-                                    <p className="text-[10px] text-muted-foreground">{mcp.category}</p>
-                                    {connected && (
-                                      <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground">
-                                        <span>{connected.actions} acciones</span>
-                                        <span>•</span>
-                                        <span>{connected.lastSync}</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                                <div className="mt-3 flex gap-2">
-                                  {connected ? (
-                                    <>
-                                      <Button size="sm" variant="outline" className="flex-1 h-7 text-xs">Configurar</Button>
-                                      <Button size="sm" variant="ghost" className="h-7 text-xs text-red-500" onClick={() => setMcpIntegrations(mcpIntegrations.filter(m => m.id !== mcp.id))}>Desconectar</Button>
-                                    </>
-                                  ) : (
-                                    <Button size="sm" className="flex-1 h-7 text-xs bg-emerald-500 hover:bg-emerald-600" onClick={() => setMcpIntegrations([...mcpIntegrations, { id: mcp.id, name: mcp.name, status: 'conectado', lastSync: 'Ahora', actions: 0 }])}>Conectar</Button>
-                                  )}
-                                </div>
-                              </CardContent>
-                            </Card>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Quick Stats */}
-                  <div className="grid sm:grid-cols-4 gap-3">
-                    <Card className="p-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                          <Database className="w-4 h-4 text-emerald-500" />
-                        </div>
-                        <div>
-                          <div className="text-lg font-bold">{dataSourceRows.filter(r => r.estado === 'conectado').length}</div>
-                          <div className="text-[10px] text-muted-foreground">Tradicionales</div>
-                        </div>
-                      </div>
-                    </Card>
-                    <Card className="p-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                          <Webhook className="w-4 h-4 text-purple-500" />
-                        </div>
-                        <div>
-                          <div className="text-lg font-bold">{mcpIntegrations.length}</div>
-                          <div className="text-[10px] text-muted-foreground">MCP Activos</div>
-                        </div>
-                      </div>
-                    </Card>
-                    <Card className="p-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                          <Zap className="w-4 h-4 text-blue-500" />
-                        </div>
-                        <div>
-                          <div className="text-lg font-bold">{mcpIntegrations.reduce((acc, m) => acc + m.actions, 0)}</div>
-                          <div className="text-[10px] text-muted-foreground">Acciones MCP</div>
-                        </div>
-                      </div>
-                    </Card>
-                    <Card className="p-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center">
-                          <RefreshCw className="w-4 h-4 text-yellow-500" />
-                        </div>
-                        <div>
-                          <div className="text-lg font-bold">{dataSourceRows.reduce((acc, r) => acc + r.registros, 0).toLocaleString()}</div>
-                          <div className="text-[10px] text-muted-foreground">Total Registros</div>
-                        </div>
-                      </div>
-                    </Card>
-                  </div>
-                </div>
-              )}
-              
-              {/* Tab: Predicciones */}
-              {activeTab === "predicciones" && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h2 className="text-xl font-bold">Predicciones</h2>
-                      <p className="text-xs text-muted-foreground">Análisis predictivo de agentes y modelos</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Select value={predictionFilter.type} onValueChange={(v) => setPredictionFilter({...predictionFilter, type: v})}>
-                        <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="Tipo" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="todos">Todos</SelectItem>
-                          <SelectItem value="agente">Por Agente</SelectItem>
-                          <SelectItem value="modelo">Por Modelo</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Select value={predictionFilter.confidence} onValueChange={(v) => setPredictionFilter({...predictionFilter, confidence: v})}>
-                        <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="Confianza" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="todos">Todas</SelectItem>
-                          <SelectItem value="alta">Alta (80%+)</SelectItem>
-                          <SelectItem value="media">Media (60-80%)</SelectItem>
-                          <SelectItem value="baja">Baja (&lt;60%)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  {/* Prediction Cards */}
-                  <div className="space-y-3">
-                    {predictions
-                      .filter(p => {
-                        if (predictionFilter.type !== 'todos' && p.type !== predictionFilter.type) return false;
-                        if (predictionFilter.confidence === 'alta' && p.confidence < 80) return false;
-                        if (predictionFilter.confidence === 'media' && (p.confidence < 60 || p.confidence >= 80)) return false;
-                        if (predictionFilter.confidence === 'baja' && p.confidence >= 60) return false;
-                        return true;
-                      })
-                      .map((pred) => (
-                      <Card key={pred.id} className="hover:shadow-md transition-shadow">
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-4">
-                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                              pred.type === 'agente' ? 'bg-emerald-500/20' : 'bg-purple-500/20'
-                            }`}>
-                              {pred.type === 'agente' ? (
-                                <Bot className={`w-6 h-6 text-emerald-500`} />
-                              ) : (
-                                <Brain className={`w-6 h-6 text-purple-500`} />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <Badge variant="outline" className={`text-[10px] ${
-                                  pred.type === 'agente' ? 'border-emerald-500 text-emerald-500' : 'border-purple-500 text-purple-500'
-                                }`}>
-                                  {pred.type === 'agente' ? 'Agente' : 'Modelo'}
-                                </Badge>
-                                <span className="text-xs text-muted-foreground">{pred.source}</span>
-                                <Badge variant="secondary" className="text-[10px] ml-auto">{pred.category}</Badge>
-                              </div>
-                              <p className="text-sm mb-2">{pred.prediction}</p>
-                              <div className="flex items-center gap-4">
-                                <div className="flex items-center gap-2">
-                                  <div className="text-xs text-muted-foreground">Confianza:</div>
-                                  <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                                    <div 
-                                      className={`h-full rounded-full ${
-                                        pred.confidence >= 80 ? 'bg-emerald-500' : 
-                                        pred.confidence >= 60 ? 'bg-yellow-500' : 'bg-red-500'
-                                      }`}
-                                      style={{ width: `${pred.confidence}%` }}
-                                    />
-                                  </div>
-                                  <span className={`text-xs font-bold ${
-                                    pred.confidence >= 80 ? 'text-emerald-500' : 
-                                    pred.confidence >= 60 ? 'text-yellow-500' : 'text-red-500'
-                                  }`}>{pred.confidence}%</span>
-                                </div>
-                                <span className="text-xs text-muted-foreground">{pred.date}</span>
-                              </div>
-                            </div>
-                            <div className="flex flex-col gap-1">
-                              <Button size="sm" variant="outline" className="h-7 text-xs gap-1">
-                                <Zap className="w-3 h-3" /> Crear Tarea
-                              </Button>
-                              <Button size="sm" variant="ghost" className="h-7 text-xs">
-                                Ver Detalles
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                  
-                  {/* Oportunidades de Colaboración Detectadas */}
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm flex items-center gap-2">
-                        <Handshake className="w-4 h-4 text-teal-500" />
-                        Oportunidades de Colaboración Detectadas
-                      </CardTitle>
-                      <CardDescription>Empresas con sinergias potenciales identificadas por IA</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid md:grid-cols-3 gap-3">
-                        {[
-                          { name: "PayFlow Solutions", sinergia: "Integración de pagos", match: 92, tipo: "Tecnología" },
-                          { name: "RiskAnalytics Pro", sinergia: "Scoring de riesgo avanzado", match: 88, tipo: "Analytics" },
-                          { name: "ComplianceBot", sinergia: "Cumplimiento normativo automatizado", match: 85, tipo: "LegalTech" },
-                        ].map((partner, i) => (
-                          <div key={i} className="p-3 bg-muted/50 rounded-lg border hover:border-teal-500/50 transition-colors">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="font-medium text-sm">{partner.name}</span>
-                              <Badge className="bg-emerald-500/10 text-emerald-600 text-[10px]">{partner.match}% match</Badge>
-                            </div>
-                            <p className="text-xs text-muted-foreground mb-2">{partner.sinergia}</p>
-                            <div className="flex items-center justify-between mb-2">
-                              <Badge variant="outline" className="text-[10px]">{partner.tipo}</Badge>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button size="sm" variant="outline" className="flex-1 h-7 text-[10px]">Ver perfil</Button>
-                              <Button size="sm" className="flex-1 h-7 text-[10px] bg-emerald-500 hover:bg-emerald-600">Contactar</Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  {/* Summary Stats */}
-                  <div className="grid sm:grid-cols-3 gap-3">
-                    <Card className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-emerald-500/20">
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-3">
-                          <Bot className="w-8 h-8 text-emerald-500" />
-                          <div>
-                            <div className="text-2xl font-bold">{predictions.filter(p => p.type === 'agente').length}</div>
-                            <div className="text-xs text-muted-foreground">Predicciones de Agentes</div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-500/20">
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-3">
-                          <Brain className="w-8 h-8 text-purple-500" />
-                          <div>
-                            <div className="text-2xl font-bold">{predictions.filter(p => p.type === 'modelo').length}</div>
-                            <div className="text-xs text-muted-foreground">Predicciones de Modelos</div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border-yellow-500/20">
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-3">
-                          <TrendingUp className="w-8 h-8 text-yellow-500" />
-                          <div>
-                            <div className="text-2xl font-bold">{Math.round(predictions.reduce((acc, p) => acc + p.confidence, 0) / predictions.length)}%</div>
-                            <div className="text-xs text-muted-foreground">Confianza Media</div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
-              )}
-              
-              {/* Tab: Tareas Automáticas */}
-              {activeTab === "tareas" && (
-                <div className="space-y-4" onMouseEnter={() => setCursorType('action')}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h2 className="text-xl font-bold">Tareas Automáticas</h2>
-                      <p className="text-xs text-muted-foreground">Acciones derivadas de predicciones</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Select value={taskFilter.status} onValueChange={(v) => setTaskFilter({...taskFilter, status: v})}>
-                        <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="Estado" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="todos">Todos</SelectItem>
-                          <SelectItem value="pendiente">Pendiente</SelectItem>
-                          <SelectItem value="en-progreso">En Progreso</SelectItem>
-                          <SelectItem value="completada">Completada</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Select value={taskFilter.type} onValueChange={(v) => setTaskFilter({...taskFilter, type: v})}>
-                        <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="Tipo" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="todos">Todos</SelectItem>
-                          <SelectItem value="email">Email</SelectItem>
-                          <SelectItem value="llamada">Llamada</SelectItem>
-                          <SelectItem value="reporte">Reporte</SelectItem>
-                          <SelectItem value="analisis">Análisis</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  {/* Task Cards */}
-                  <div className="space-y-2">
-                    {autoTasks
-                      .filter(t => {
-                        if (taskFilter.status !== 'todos' && t.status !== taskFilter.status) return false;
-                        if (taskFilter.type !== 'todos' && t.type !== taskFilter.type) return false;
-                        return true;
-                      })
-                      .map((task) => (
-                      <Card key={task.id} className={`hover:shadow-md transition-all ${
-                        task.status === 'completada' ? 'opacity-60' : 
-                        task.priority === 'alta' ? 'border-l-4 border-l-red-500' : 
-                        task.priority === 'media' ? 'border-l-4 border-l-yellow-500' : 'border-l-4 border-l-gray-400'
-                      }`}>
-                        <CardContent className="p-3">
-                          <div className="flex items-center gap-4">
-                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
-                              task.type === 'email' ? 'bg-blue-500/20' : 
-                              task.type === 'llamada' ? 'bg-green-500/20' : 
-                              task.type === 'reporte' ? 'bg-purple-500/20' : 'bg-orange-500/20'
-                            }`}>
-                              {task.type === 'email' ? <Mail className="w-5 h-5 text-blue-500" /> : 
-                               task.type === 'llamada' ? <Phone className="w-5 h-5 text-green-500" /> : 
-                               task.type === 'reporte' ? <FileText className="w-5 h-5 text-purple-500" /> : 
-                               <BarChart3 className="w-5 h-5 text-orange-500" />}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <h3 className={`text-sm font-medium ${task.status === 'completada' ? 'line-through text-muted-foreground' : ''}`}>{task.task}</h3>
-                                <Badge className={`text-[10px] ${
-                                  task.status === 'pendiente' ? 'bg-yellow-500' : 
-                                  task.status === 'en-progreso' ? 'bg-blue-500' : 'bg-emerald-500'
-                                }`}>
-                                  {task.status === 'en-progreso' ? 'En Progreso' : task.status}
-                                </Badge>
-                              </div>
-                              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                <span className="flex items-center gap-1"><Bot className="w-3 h-3" />{task.agent}</span>
-                                <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{task.scheduled}</span>
-                              </div>
-                              <div className="text-[10px] text-muted-foreground mt-1 italic">"{task.prediction}"</div>
-                            </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                              {task.status === 'pendiente' && (
-                                <>
-                                  <Button size="sm" className="h-7 text-xs bg-emerald-500 hover:bg-emerald-600" onClick={() => setAutoTasks(autoTasks.map(t => t.id === task.id ? {...t, status: 'en-progreso'} : t))}>
-                                    <Play className="w-3 h-3 mr-1" /> Ejecutar
-                                  </Button>
-                                  <Button size="sm" variant="outline" className="h-7 text-xs">
-                                    <Calendar className="w-3 h-3 mr-1" /> Programar
-                                  </Button>
-                                </>
-                              )}
-                              {task.status === 'en-progreso' && (
-                                <>
-                                  <Button size="sm" className="h-7 text-xs bg-emerald-500 hover:bg-emerald-600" onClick={() => setAutoTasks(autoTasks.map(t => t.id === task.id ? {...t, status: 'completada', scheduled: 'Completado'} : t))}>
-                                    <CheckCircle className="w-3 h-3 mr-1" /> Completar
-                                  </Button>
-                                  <Button size="sm" variant="outline" className="h-7 text-xs">
-                                    <Pause className="w-3 h-3 mr-1" /> Pausar
-                                  </Button>
-                                </>
-                              )}
-                              {task.status === 'completada' && (
-                                <Badge variant="outline" className="text-emerald-500">
-                                  <CheckCircle className="w-3 h-3 mr-1" /> Hecho
-                                </Badge>
-                              )}
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={() => setAutoTasks(autoTasks.filter(t => t.id !== task.id))}>
-                                <Trash2 className="w-3 h-3" />
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                  
-                  {/* Task Stats */}
-                  <div className="grid sm:grid-cols-4 gap-3">
-                    <Card className="p-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center">
-                          <Clock className="w-4 h-4 text-yellow-500" />
-                        </div>
-                        <div>
-                          <div className="text-lg font-bold">{autoTasks.filter(t => t.status === 'pendiente').length}</div>
-                          <div className="text-[10px] text-muted-foreground">Pendientes</div>
-                        </div>
-                      </div>
-                    </Card>
-                    <Card className="p-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                          <Play className="w-4 h-4 text-blue-500" />
-                        </div>
-                        <div>
-                          <div className="text-lg font-bold">{autoTasks.filter(t => t.status === 'en-progreso').length}</div>
-                          <div className="text-[10px] text-muted-foreground">En Progreso</div>
-                        </div>
-                      </div>
-                    </Card>
-                    <Card className="p-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                          <CheckCircle className="w-4 h-4 text-emerald-500" />
-                        </div>
-                        <div>
-                          <div className="text-lg font-bold">{autoTasks.filter(t => t.status === 'completada').length}</div>
-                          <div className="text-[10px] text-muted-foreground">Completadas</div>
-                        </div>
-                      </div>
-                    </Card>
-                    <Card className="p-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center">
-                          <AlertCircle className="w-4 h-4 text-red-500" />
-                        </div>
-                        <div>
-                          <div className="text-lg font-bold">{autoTasks.filter(t => t.priority === 'alta').length}</div>
-                          <div className="text-[10px] text-muted-foreground">Prioridad Alta</div>
-                        </div>
-                      </div>
-                    </Card>
-                  </div>
-                </div>
-              )}
-              
-              {/* Tab: Competencia */}
-              {activeTab === "competencia" && (
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h2 className="text-2xl font-bold">Seguimiento de Competencia</h2>
-                      <p className="text-sm text-muted-foreground">Monitoriza a tus competidores con IA</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="gap-1">
-                        <Download className="w-4 h-4" /> Exportar
-                      </Button>
-                      <Button size="sm" className="gap-1 bg-emerald-500 hover:bg-emerald-600">
-                        <Plus className="w-4 h-4" /> Añadir Competidor
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  {/* Stats Cards */}
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <Card className="border-red-500/30">
-                      <CardContent className="p-4 flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center">
-                          <AlertTriangle className="w-6 h-6 text-red-500" />
-                        </div>
-                        <div>
-                          <div className="text-2xl font-bold">2</div>
-                          <div className="text-xs text-muted-foreground">Amenaza Alta</div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card className="border-yellow-500/30">
-                      <CardContent className="p-4 flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-yellow-500/20 flex items-center justify-center">
-                          <Eye className="w-6 h-6 text-yellow-500" />
-                        </div>
-                        <div>
-                          <div className="text-2xl font-bold">1</div>
-                          <div className="text-xs text-muted-foreground">Amenaza Media</div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card className="border-emerald-500/30">
-                      <CardContent className="p-4 flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                          <Newspaper className="w-6 h-6 text-emerald-500" />
-                        </div>
-                        <div>
-                          <div className="text-2xl font-bold">38</div>
-                          <div className="text-xs text-muted-foreground">Noticias Semana</div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card className="border-purple-500/30">
-                      <CardContent className="p-4 flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                          <TrendingUp className="w-6 h-6 text-purple-500" />
-                        </div>
-                        <div>
-                          <div className="text-2xl font-bold">+12%</div>
-                          <div className="text-xs text-muted-foreground">Ventas vs Compet.</div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                  
-                  {/* Advanced Tools */}
-                  <div className="grid lg:grid-cols-3 gap-4">
-                    <Card className="lg:col-span-2">
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm flex items-center gap-2">
-                          <Radar className="w-4 h-4 text-emerald-500" />
-                          Análisis Competitivo
-                        </CardTitle>
-                        <CardDescription>Comparativa con principales competidores</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <ChartContainer config={{
-                          nosotros: { label: "Nosotros", color: "#10b981" },
-                          competencia: { label: "Competencia", color: "#f59e0b" },
-                        }} className="h-64">
-                          <RadarChart data={[
-                            { metric: "Producto", nosotros: 95, competencia: 82 },
-                            { metric: "Precio", nosotros: 78, competencia: 85 },
-                            { metric: "Soporte", nosotros: 92, competencia: 75 },
-                            { metric: "Innovación", nosotros: 88, competencia: 90 },
-                            { metric: "Market Share", nosotros: 70, competencia: 85 },
-                          ]}>
-                            <PolarGrid />
-                            <PolarAngleAxis dataKey="metric" className="text-xs" />
-                            <PolarRadiusAxis angle={30} domain={[0, 100]} />
-                            <RechartsRadar name="Nosotros" dataKey="nosotros" stroke="#10b981" fill="#10b981" fillOpacity={0.3} />
-                            <RechartsRadar name="Competencia" dataKey="competencia" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.3} />
-                          </RadarChart>
-                        </ChartContainer>
-                        <div className="flex justify-center gap-6 mt-4">
-                          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-emerald-500" /><span className="text-sm">Tu empresa</span></div>
-                          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-yellow-500" /><span className="text-sm">Competencia</span></div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    
+
+                    {/* Oportunidades de Colaboración Detectadas */}
                     <Card>
                       <CardHeader className="pb-2">
                         <CardTitle className="text-sm flex items-center gap-2">
-                          <Eye className="w-4 h-4 text-purple-500" />
-                          Alertas de Competencia
+                          <Handshake className="w-4 h-4 text-teal-500" />
+                          Oportunidades de Colaboración Detectadas
                         </CardTitle>
+                        <CardDescription>Empresas con sinergias potenciales identificadas por IA</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid md:grid-cols-3 gap-3">
+                          {[
+                            { name: "PayFlow Solutions", sinergia: "Integración de pagos", match: 92, tipo: "Tecnología" },
+                            { name: "RiskAnalytics Pro", sinergia: "Scoring de riesgo avanzado", match: 88, tipo: "Analytics" },
+                            { name: "ComplianceBot", sinergia: "Cumplimiento normativo automatizado", match: 85, tipo: "LegalTech" },
+                          ].map((partner, i) => (
+                            <div key={i} className="p-3 bg-muted/50 rounded-lg border hover:border-teal-500/50 transition-colors">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-medium text-sm">{partner.name}</span>
+                                <Badge className="bg-emerald-500/10 text-emerald-600 text-[10px]">{partner.match}% match</Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground mb-2">{partner.sinergia}</p>
+                              <div className="flex items-center justify-between mb-2">
+                                <Badge variant="outline" className="text-[10px]">{partner.tipo}</Badge>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button size="sm" variant="outline" className="flex-1 h-7 text-[10px]">Ver perfil</Button>
+                                <Button size="sm" className="flex-1 h-7 text-[10px] bg-emerald-500 hover:bg-emerald-600">Contactar</Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Summary Stats */}
+                    <div className="grid sm:grid-cols-3 gap-3">
+                      <Card className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-emerald-500/20">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <Bot className="w-8 h-8 text-emerald-500" />
+                            <div>
+                              <div className="text-2xl font-bold">{predictions.filter(p => p.type === 'agente').length}</div>
+                              <div className="text-xs text-muted-foreground">Predicciones de Agentes</div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-500/20">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <Brain className="w-8 h-8 text-purple-500" />
+                            <div>
+                              <div className="text-2xl font-bold">{predictions.filter(p => p.type === 'modelo').length}</div>
+                              <div className="text-xs text-muted-foreground">Predicciones de Modelos</div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border-yellow-500/20">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <TrendingUp className="w-8 h-8 text-yellow-500" />
+                            <div>
+                              <div className="text-2xl font-bold">{Math.round(predictions.reduce((acc, p) => acc + p.confidence, 0) / predictions.length)}%</div>
+                              <div className="text-xs text-muted-foreground">Confianza Media</div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab: Tareas Automáticas */}
+                {activeTab === "tareas" && (
+                  <div className="space-y-4" onMouseEnter={() => setCursorType('action')}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-xl font-bold">Tareas Automáticas</h2>
+                        <p className="text-xs text-muted-foreground">Acciones derivadas de predicciones</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Select value={taskFilter.status} onValueChange={(v) => setTaskFilter({ ...taskFilter, status: v })}>
+                          <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="Estado" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="todos">Todos</SelectItem>
+                            <SelectItem value="pendiente">Pendiente</SelectItem>
+                            <SelectItem value="en-progreso">En Progreso</SelectItem>
+                            <SelectItem value="completada">Completada</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Select value={taskFilter.type} onValueChange={(v) => setTaskFilter({ ...taskFilter, type: v })}>
+                          <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="Tipo" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="todos">Todos</SelectItem>
+                            <SelectItem value="email">Email</SelectItem>
+                            <SelectItem value="llamada">Llamada</SelectItem>
+                            <SelectItem value="reporte">Reporte</SelectItem>
+                            <SelectItem value="analisis">Análisis</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {/* Task Cards */}
+                    <div className="space-y-2">
+                      {autoTasks
+                        .filter(t => {
+                          if (taskFilter.status !== 'todos' && t.status !== taskFilter.status) return false;
+                          if (taskFilter.type !== 'todos' && t.type !== taskFilter.type) return false;
+                          return true;
+                        })
+                        .map((task) => (
+                          <Card key={task.id} className={`hover:shadow-md transition-all ${task.status === 'completada' ? 'opacity-60' :
+                            task.priority === 'alta' ? 'border-l-4 border-l-red-500' :
+                              task.priority === 'media' ? 'border-l-4 border-l-yellow-500' : 'border-l-4 border-l-gray-400'
+                            }`}>
+                            <CardContent className="p-3">
+                              <div className="flex items-center gap-4">
+                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${task.type === 'email' ? 'bg-blue-500/20' :
+                                  task.type === 'llamada' ? 'bg-green-500/20' :
+                                    task.type === 'reporte' ? 'bg-purple-500/20' : 'bg-orange-500/20'
+                                  }`}>
+                                  {task.type === 'email' ? <Mail className="w-5 h-5 text-blue-500" /> :
+                                    task.type === 'llamada' ? <Phone className="w-5 h-5 text-green-500" /> :
+                                      task.type === 'reporte' ? <FileText className="w-5 h-5 text-purple-500" /> :
+                                        <BarChart3 className="w-5 h-5 text-orange-500" />}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <h3 className={`text-sm font-medium ${task.status === 'completada' ? 'line-through text-muted-foreground' : ''}`}>{task.task}</h3>
+                                    <Badge className={`text-[10px] ${task.status === 'pendiente' ? 'bg-yellow-500' :
+                                      task.status === 'en-progreso' ? 'bg-blue-500' : 'bg-emerald-500'
+                                      }`}>
+                                      {task.status === 'en-progreso' ? 'En Progreso' : task.status}
+                                    </Badge>
+                                  </div>
+                                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                    <span className="flex items-center gap-1"><Bot className="w-3 h-3" />{task.agent}</span>
+                                    <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{task.scheduled}</span>
+                                  </div>
+                                  <div className="text-[10px] text-muted-foreground mt-1 italic">"{task.prediction}"</div>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  {task.status === 'pendiente' && (
+                                    <>
+                                      <Button size="sm" className="h-7 text-xs bg-emerald-500 hover:bg-emerald-600" onClick={() => setAutoTasks(autoTasks.map(t => t.id === task.id ? { ...t, status: 'en-progreso' } : t))}>
+                                        <Play className="w-3 h-3 mr-1" /> Ejecutar
+                                      </Button>
+                                      <Button size="sm" variant="outline" className="h-7 text-xs">
+                                        <Calendar className="w-3 h-3 mr-1" /> Programar
+                                      </Button>
+                                    </>
+                                  )}
+                                  {task.status === 'en-progreso' && (
+                                    <>
+                                      <Button size="sm" className="h-7 text-xs bg-emerald-500 hover:bg-emerald-600" onClick={() => setAutoTasks(autoTasks.map(t => t.id === task.id ? { ...t, status: 'completada', scheduled: 'Completado' } : t))}>
+                                        <CheckCircle className="w-3 h-3 mr-1" /> Completar
+                                      </Button>
+                                      <Button size="sm" variant="outline" className="h-7 text-xs">
+                                        <Pause className="w-3 h-3 mr-1" /> Pausar
+                                      </Button>
+                                    </>
+                                  )}
+                                  {task.status === 'completada' && (
+                                    <Badge variant="outline" className="text-emerald-500">
+                                      <CheckCircle className="w-3 h-3 mr-1" /> Hecho
+                                    </Badge>
+                                  )}
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500" onClick={() => setAutoTasks(autoTasks.filter(t => t.id !== task.id))}>
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                    </div>
+
+                    {/* Task Stats */}
+                    <div className="grid sm:grid-cols-4 gap-3">
+                      <Card className="p-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+                            <Clock className="w-4 h-4 text-yellow-500" />
+                          </div>
+                          <div>
+                            <div className="text-lg font-bold">{autoTasks.filter(t => t.status === 'pendiente').length}</div>
+                            <div className="text-[10px] text-muted-foreground">Pendientes</div>
+                          </div>
+                        </div>
+                      </Card>
+                      <Card className="p-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                            <Play className="w-4 h-4 text-blue-500" />
+                          </div>
+                          <div>
+                            <div className="text-lg font-bold">{autoTasks.filter(t => t.status === 'en-progreso').length}</div>
+                            <div className="text-[10px] text-muted-foreground">En Progreso</div>
+                          </div>
+                        </div>
+                      </Card>
+                      <Card className="p-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                            <CheckCircle className="w-4 h-4 text-emerald-500" />
+                          </div>
+                          <div>
+                            <div className="text-lg font-bold">{autoTasks.filter(t => t.status === 'completada').length}</div>
+                            <div className="text-[10px] text-muted-foreground">Completadas</div>
+                          </div>
+                        </div>
+                      </Card>
+                      <Card className="p-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center">
+                            <AlertCircle className="w-4 h-4 text-red-500" />
+                          </div>
+                          <div>
+                            <div className="text-lg font-bold">{autoTasks.filter(t => t.priority === 'alta').length}</div>
+                            <div className="text-[10px] text-muted-foreground">Prioridad Alta</div>
+                          </div>
+                        </div>
+                      </Card>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab: Competencia */}
+                {activeTab === "competencia" && (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-2xl font-bold">Seguimiento de Competencia</h2>
+                        <p className="text-sm text-muted-foreground">Monitoriza a tus competidores con IA</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" className="gap-1">
+                          <Download className="w-4 h-4" /> Exportar
+                        </Button>
+                        <Button size="sm" className="gap-1 bg-emerald-500 hover:bg-emerald-600">
+                          <Plus className="w-4 h-4" /> Añadir Competidor
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Stats Cards */}
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <Card className="border-red-500/30">
+                        <CardContent className="p-4 flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center">
+                            <AlertTriangle className="w-6 h-6 text-red-500" />
+                          </div>
+                          <div>
+                            <div className="text-2xl font-bold">2</div>
+                            <div className="text-xs text-muted-foreground">Amenaza Alta</div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card className="border-yellow-500/30">
+                        <CardContent className="p-4 flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-xl bg-yellow-500/20 flex items-center justify-center">
+                            <Eye className="w-6 h-6 text-yellow-500" />
+                          </div>
+                          <div>
+                            <div className="text-2xl font-bold">1</div>
+                            <div className="text-xs text-muted-foreground">Amenaza Media</div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card className="border-emerald-500/30">
+                        <CardContent className="p-4 flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                            <Newspaper className="w-6 h-6 text-emerald-500" />
+                          </div>
+                          <div>
+                            <div className="text-2xl font-bold">38</div>
+                            <div className="text-xs text-muted-foreground">Noticias Semana</div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card className="border-purple-500/30">
+                        <CardContent className="p-4 flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                            <TrendingUp className="w-6 h-6 text-purple-500" />
+                          </div>
+                          <div>
+                            <div className="text-2xl font-bold">+12%</div>
+                            <div className="text-xs text-muted-foreground">Ventas vs Compet.</div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Advanced Tools */}
+                    <div className="grid lg:grid-cols-3 gap-4">
+                      <Card className="lg:col-span-2">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm flex items-center gap-2">
+                            <Radar className="w-4 h-4 text-emerald-500" />
+                            Análisis Competitivo
+                          </CardTitle>
+                          <CardDescription>Comparativa con principales competidores</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <ChartContainer config={{
+                            nosotros: { label: "Nosotros", color: "#10b981" },
+                            competencia: { label: "Competencia", color: "#f59e0b" },
+                          }} className="h-64">
+                            <RadarChart data={[
+                              { metric: "Producto", nosotros: 95, competencia: 82 },
+                              { metric: "Precio", nosotros: 78, competencia: 85 },
+                              { metric: "Soporte", nosotros: 92, competencia: 75 },
+                              { metric: "Innovación", nosotros: 88, competencia: 90 },
+                              { metric: "Market Share", nosotros: 70, competencia: 85 },
+                            ]}>
+                              <PolarGrid />
+                              <PolarAngleAxis dataKey="metric" className="text-xs" />
+                              <PolarRadiusAxis angle={30} domain={[0, 100]} />
+                              <RechartsRadar name="Nosotros" dataKey="nosotros" stroke="#10b981" fill="#10b981" fillOpacity={0.3} />
+                              <RechartsRadar name="Competencia" dataKey="competencia" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.3} />
+                            </RadarChart>
+                          </ChartContainer>
+                          <div className="flex justify-center gap-6 mt-4">
+                            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-emerald-500" /><span className="text-sm">Tu empresa</span></div>
+                            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-yellow-500" /><span className="text-sm">Competencia</span></div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm flex items-center gap-2">
+                            <Eye className="w-4 h-4 text-purple-500" />
+                            Alertas de Competencia
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                          {[
+                            { tipo: "producto", empresa: "CompetidorX", mensaje: "Lanzó nuevo producto de gestión", prioridad: "alta", tiempo: "Hace 2h" },
+                            { tipo: "partnership", empresa: "AlliedFin", mensaje: "Posible partner para LATAM", prioridad: "media", tiempo: "Hace 1d" },
+                            { tipo: "mercado", empresa: "MarketWatch", mensaje: "Nueva regulación favorable", prioridad: "alta", tiempo: "Hace 3d" },
+                          ].map((alerta, i) => (
+                            <div key={i} className={`p-2 rounded-lg border ${alerta.prioridad === "alta" ? "border-red-500/30 bg-red-500/5" : "border-yellow-500/30 bg-yellow-500/5"}`}>
+                              <div className="flex items-center justify-between mb-1">
+                                <Badge variant="secondary" className="text-[10px]">{alerta.empresa}</Badge>
+                                <span className="text-[10px] text-muted-foreground">{alerta.tiempo}</span>
+                              </div>
+                              <p className="text-xs">{alerta.mensaje}</p>
+                              {alerta.tipo === "partnership" && (
+                                <Button size="sm" variant="outline" className="mt-1 h-6 text-[10px] w-full">
+                                  <Handshake className="w-3 h-3 mr-1" />Contactar
+                                </Button>
+                              )}
+                            </div>
+                          ))}
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Oportunidades de Colaboración */}
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <Handshake className="w-4 h-4 text-teal-500" />
+                          Oportunidades de Colaboración Detectadas
+                        </CardTitle>
+                        <CardDescription>Empresas con sinergias potenciales</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid md:grid-cols-3 gap-3">
+                          {[
+                            { name: "PayFlow Solutions", sinergia: "Integración de pagos", match: 92 },
+                            { name: "RiskAnalytics Pro", sinergia: "Scoring de riesgo", match: 88 },
+                            { name: "ComplianceBot", sinergia: "Cumplimiento normativo", match: 85 },
+                          ].map((partner, i) => (
+                            <div key={i} className="p-3 bg-muted/50 rounded-lg">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-medium text-sm">{partner.name}</span>
+                                <Badge className="bg-emerald-500/10 text-emerald-600 text-[10px]">{partner.match}% match</Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground mb-2">{partner.sinergia}</p>
+                              <div className="flex gap-2">
+                                <Button size="sm" variant="outline" className="flex-1 h-7 text-[10px]">Ver perfil</Button>
+                                <Button size="sm" className="flex-1 h-7 text-[10px] bg-emerald-500 hover:bg-emerald-600">Contactar</Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Competitor List */}
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-sm">Listado de Competidores</CardTitle>
+                          <div className="flex gap-2">
+                            <Select defaultValue="all">
+                              <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="all">Todos</SelectItem>
+                                <SelectItem value="direct">Directos</SelectItem>
+                                <SelectItem value="indirect">Indirectos</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
                       </CardHeader>
                       <CardContent className="space-y-2">
-                        {[
-                          { tipo: "producto", empresa: "CompetidorX", mensaje: "Lanzó nuevo producto de gestión", prioridad: "alta", tiempo: "Hace 2h" },
-                          { tipo: "partnership", empresa: "AlliedFin", mensaje: "Posible partner para LATAM", prioridad: "media", tiempo: "Hace 1d" },
-                          { tipo: "mercado", empresa: "MarketWatch", mensaje: "Nueva regulación favorable", prioridad: "alta", tiempo: "Hace 3d" },
-                        ].map((alerta, i) => (
-                          <div key={i} className={`p-2 rounded-lg border ${alerta.prioridad === "alta" ? "border-red-500/30 bg-red-500/5" : "border-yellow-500/30 bg-yellow-500/5"}`}>
-                            <div className="flex items-center justify-between mb-1">
-                              <Badge variant="secondary" className="text-[10px]">{alerta.empresa}</Badge>
-                              <span className="text-[10px] text-muted-foreground">{alerta.tiempo}</span>
+                        {competitors.map(comp => (
+                          <div key={comp.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${comp.threat === "high" ? "bg-red-500/20" : comp.threat === "medium" ? "bg-yellow-500/20" : "bg-emerald-500/20"
+                                }`}>
+                                <Building className={`w-5 h-5 ${comp.threat === "high" ? "text-red-500" : comp.threat === "medium" ? "text-yellow-500" : "text-emerald-500"
+                                  }`} />
+                              </div>
+                              <div>
+                                <div className="font-medium text-sm">{comp.name}</div>
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                  <Badge variant="outline" className="text-[9px]">{comp.type}</Badge>
+                                  <span>•</span>
+                                  <span>{comp.lastUpdate}</span>
+                                </div>
+                              </div>
                             </div>
-                            <p className="text-xs">{alerta.mensaje}</p>
-                            {alerta.tipo === "partnership" && (
-                              <Button size="sm" variant="outline" className="mt-1 h-6 text-[10px] w-full">
-                                <Handshake className="w-3 h-3 mr-1" />Contactar
-                              </Button>
-                            )}
+                            <div className="flex items-center gap-3">
+                              <div className="flex flex-wrap gap-1 max-w-[200px]">
+                                {comp.products.map((p, i) => <Badge key={i} variant="secondary" className="text-[9px]">{p}</Badge>)}
+                              </div>
+                              <Badge className={`${comp.threat === "high" ? "bg-red-500" : comp.threat === "medium" ? "bg-yellow-500" : "bg-emerald-500"}`}>
+                                {comp.news} noticias
+                              </Badge>
+                              <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="w-4 h-4" /></Button>
+                            </div>
                           </div>
                         ))}
                       </CardContent>
                     </Card>
                   </div>
-                  
-                  {/* Oportunidades de Colaboración */}
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm flex items-center gap-2">
-                        <Handshake className="w-4 h-4 text-teal-500" />
-                        Oportunidades de Colaboración Detectadas
-                      </CardTitle>
-                      <CardDescription>Empresas con sinergias potenciales</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid md:grid-cols-3 gap-3">
-                        {[
-                          { name: "PayFlow Solutions", sinergia: "Integración de pagos", match: 92 },
-                          { name: "RiskAnalytics Pro", sinergia: "Scoring de riesgo", match: 88 },
-                          { name: "ComplianceBot", sinergia: "Cumplimiento normativo", match: 85 },
-                        ].map((partner, i) => (
-                          <div key={i} className="p-3 bg-muted/50 rounded-lg">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="font-medium text-sm">{partner.name}</span>
-                              <Badge className="bg-emerald-500/10 text-emerald-600 text-[10px]">{partner.match}% match</Badge>
-                            </div>
-                            <p className="text-xs text-muted-foreground mb-2">{partner.sinergia}</p>
-                            <div className="flex gap-2">
-                              <Button size="sm" variant="outline" className="flex-1 h-7 text-[10px]">Ver perfil</Button>
-                              <Button size="sm" className="flex-1 h-7 text-[10px] bg-emerald-500 hover:bg-emerald-600">Contactar</Button>
-                            </div>
-                          </div>
-                        ))}
+                )}
+
+                {/* Tab: Analíticas */}
+                {activeTab === "analiticas" && (
+                  <div className="space-y-4">
+                    {/* Sub-tabs for Analytics */}
+                    <div className="flex items-center justify-between border-b pb-2">
+                      <div className="flex gap-2">
+                        <Button
+                          variant={analyticsTab === 'avanzadas' ? 'default' : 'ghost'}
+                          size="sm"
+                          className={`gap-2 ${analyticsTab === 'avanzadas' ? 'bg-emerald-500 hover:bg-emerald-600' : ''}`}
+                          onClick={() => setAnalyticsTab('avanzadas')}
+                        >
+                          <BarChart3 className="w-4 h-4" /> Analíticas Avanzadas
+                        </Button>
+                        <Button
+                          variant={analyticsTab === 'mercado' ? 'default' : 'ghost'}
+                          size="sm"
+                          className={`gap-2 ${analyticsTab === 'mercado' ? 'bg-emerald-500 hover:bg-emerald-600' : ''}`}
+                          onClick={() => setAnalyticsTab('mercado')}
+                        >
+                          <TrendingUp className="w-4 h-4" /> Analíticas de Mercado
+                        </Button>
                       </div>
-                    </CardContent>
-                  </Card>
-                  
-                  {/* Competitor List */}
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-sm">Listado de Competidores</CardTitle>
-                        <div className="flex gap-2">
-                          <Select defaultValue="all">
-                            <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">Todos</SelectItem>
-                              <SelectItem value="direct">Directos</SelectItem>
-                              <SelectItem value="indirect">Indirectos</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" className="gap-1">
+                          <Download className="w-4 h-4" /> Exportar
+                        </Button>
                       </div>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      {competitors.map(comp => (
-                        <div key={comp.id} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                              comp.threat === "high" ? "bg-red-500/20" : comp.threat === "medium" ? "bg-yellow-500/20" : "bg-emerald-500/20"
-                            }`}>
-                              <Building className={`w-5 h-5 ${
-                                comp.threat === "high" ? "text-red-500" : comp.threat === "medium" ? "text-yellow-500" : "text-emerald-500"
-                              }`} />
-                            </div>
-                            <div>
-                              <div className="font-medium text-sm">{comp.name}</div>
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <Badge variant="outline" className="text-[9px]">{comp.type}</Badge>
-                                <span>•</span>
-                                <span>{comp.lastUpdate}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <div className="flex flex-wrap gap-1 max-w-[200px]">
-                              {comp.products.map((p, i) => <Badge key={i} variant="secondary" className="text-[9px]">{p}</Badge>)}
-                            </div>
-                            <Badge className={`${comp.threat === "high" ? "bg-red-500" : comp.threat === "medium" ? "bg-yellow-500" : "bg-emerald-500"}`}>
-                              {comp.news} noticias
-                            </Badge>
-                            <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="w-4 h-4" /></Button>
-                          </div>
-                        </div>
-                      ))}
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-              
-              {/* Tab: Analíticas */}
-              {activeTab === "analiticas" && (
-                <div className="space-y-4">
-                  {/* Sub-tabs for Analytics */}
-                  <div className="flex items-center justify-between border-b pb-2">
-                    <div className="flex gap-2">
-                      <Button 
-                        variant={analyticsTab === 'avanzadas' ? 'default' : 'ghost'} 
-                        size="sm"
-                        className={`gap-2 ${analyticsTab === 'avanzadas' ? 'bg-emerald-500 hover:bg-emerald-600' : ''}`}
-                        onClick={() => setAnalyticsTab('avanzadas')}
-                      >
-                        <BarChart3 className="w-4 h-4" /> Analíticas Avanzadas
-                      </Button>
-                      <Button 
-                        variant={analyticsTab === 'mercado' ? 'default' : 'ghost'} 
-                        size="sm"
-                        className={`gap-2 ${analyticsTab === 'mercado' ? 'bg-emerald-500 hover:bg-emerald-600' : ''}`}
-                        onClick={() => setAnalyticsTab('mercado')}
-                      >
-                        <TrendingUp className="w-4 h-4" /> Analíticas de Mercado
-                      </Button>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" className="gap-1">
-                        <Download className="w-4 h-4" /> Exportar
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  {/* Analíticas Avanzadas Tab */}
-                  {analyticsTab === 'avanzadas' && (
-                    <>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h2 className="text-xl font-bold">Analíticas Avanzadas</h2>
-                          <p className="text-xs text-muted-foreground">Métricas de rendimiento en tiempo real</p>
-                        </div>
-                        <Select defaultValue="week">
-                          <SelectTrigger className="w-[140px] h-8 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="week">Esta semana</SelectItem>
-                            <SelectItem value="month">Este mes</SelectItem>
-                            <SelectItem value="quarter">Este trimestre</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      {/* KPI Cards */}
-                      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                        {[
-                          { label: "Emails Procesados", value: "799", change: "+23%", icon: Mail, color: "emerald" },
-                          { label: "Llamadas Gestión", value: "278", change: "+15%", icon: Phone, color: "teal" },
-                          { label: "Tareas Completadas", value: "465", change: "+31%", icon: CheckCircle2, color: "cyan" },
-                          { label: "ROI Estimado", value: "+34%", change: "Objetivo: +25%", icon: TrendingUp, color: "purple" },
-                        ].map((stat, i) => (
-                          <Card key={i} className="p-3">
-                            <div className="flex items-center justify-between mb-1">
-                              <stat.icon className={`w-4 h-4 text-${stat.color}-500`} />
-                              <Badge variant="outline" className="text-[10px]">{stat.change}</Badge>
-                            </div>
-                            <div className="text-xl font-bold">{stat.value}</div>
-                            <div className="text-[10px] text-muted-foreground">{stat.label}</div>
-                          </Card>
-                        ))}
-                      </div>
-                      
-                      {/* Charts Grid */}
-                      <div className="grid lg:grid-cols-2 gap-3">
-                        <Card>
-                          <CardHeader className="pb-1 pt-3">
-                            <CardTitle className="text-xs">Actividad Semanal</CardTitle>
-                          </CardHeader>
-                          <CardContent className="pb-3">
-                            <ChartContainer config={{
-                              emails: { label: "Emails", color: "#10b981" },
-                              llamadas: { label: "Llamadas", color: "#14b8a6" },
-                              tareas: { label: "Tareas", color: "#06b6d4" },
-                            }} className="h-[160px]">
-                              <BarChart data={analyticsData}>
-                                <XAxis dataKey="name" fontSize={9} />
-                                <YAxis fontSize={9} />
-                                <ChartTooltip content={<ChartTooltipContent />} />
-                                <Bar dataKey="emails" fill="#10b981" radius={[3, 3, 0, 0]} />
-                                <Bar dataKey="llamadas" fill="#14b8a6" radius={[3, 3, 0, 0]} />
-                                <Bar dataKey="tareas" fill="#06b6d4" radius={[3, 3, 0, 0]} />
-                              </BarChart>
-                            </ChartContainer>
-                          </CardContent>
-                        </Card>
-                        
-                        <Card>
-                          <CardHeader className="pb-1 pt-3">
-                            <CardTitle className="text-xs flex items-center gap-1">
-                              <TrendingUp className="w-3 h-3 text-emerald-500" />
-                              Tendencia de Rendimiento
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="pb-3">
-                            <ChartContainer config={{
-                              rendimiento: { label: "Rendimiento", color: "#10b981" },
-                            }} className="h-[160px]">
-                              <RechartsLineChart data={[
-                                { name: "Ene", rendimiento: 65 },
-                                { name: "Feb", rendimiento: 72 },
-                                { name: "Mar", rendimiento: 68 },
-                                { name: "Abr", rendimiento: 78 },
-                                { name: "May", rendimiento: 85 },
-                                { name: "Jun", rendimiento: 92 },
-                                { name: "Jul", rendimiento: 88 },
-                              ]}>
-                                <XAxis dataKey="name" fontSize={9} />
-                                <YAxis fontSize={9} />
-                                <ChartTooltip content={<ChartTooltipContent />} />
-                                <Line type="monotone" dataKey="rendimiento" stroke="#10b981" strokeWidth={2} dot={{ fill: "#10b981", r: 3 }} />
-                              </RechartsLineChart>
-                            </ChartContainer>
-                          </CardContent>
-                        </Card>
-                      </div>
-                      
-                      {/* Token & Revenue */}
-                      <div className="grid lg:grid-cols-3 gap-3">
-                        <Card className="p-3">
-                          <div className="text-xs font-medium flex items-center gap-1 mb-2">
-                            <Cpu className="w-3 h-3 text-purple-500" /> Consumo de Tokens
+
+                    {/* Analíticas Avanzadas Tab */}
+                    {analyticsTab === 'avanzadas' && (
+                      <>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h2 className="text-xl font-bold">Analíticas Avanzadas</h2>
+                            <p className="text-xs text-muted-foreground">Métricas de rendimiento en tiempo real</p>
                           </div>
-                          <div className="text-2xl font-bold mb-1">1.2M</div>
-                          <Progress value={72} className="h-1.5 mb-1" />
-                          <div className="text-[10px] text-muted-foreground">72% del límite mensual</div>
-                        </Card>
-                        
-                        <Card className="p-3">
-                          <div className="text-xs font-medium flex items-center gap-1 mb-2">
-                            <Bot className="w-3 h-3 text-emerald-500" /> Rendimiento Agentes
-                          </div>
-                          <div className="space-y-1.5">
-                            {userAgents.slice(0, 3).map((agent: any) => (
-                              <div key={agent.id} className="flex items-center gap-2">
-                                <span className="text-[10px] flex-1 truncate">{agent.name}</span>
-                                <span className="text-[10px] font-medium text-emerald-500">{agent.stats.success}%</span>
-                              </div>
-                            ))}
-                          </div>
-                        </Card>
-                        
-                        <Card className="p-3">
-                          <div className="text-xs font-medium flex items-center gap-1 mb-2">
-                            <DollarSign className="w-3 h-3 text-yellow-500" /> Desglose de Ingresos
-                          </div>
-                          <div className="text-2xl font-bold mb-1">€49,000</div>
-                          <div className="text-[10px] text-muted-foreground">+18% vs mes anterior</div>
-                        </Card>
-                      </div>
-                    </>
-                  )}
-                  
-                  {/* Analíticas de Mercado Tab - Professional Trading Interface */}
-                  {analyticsTab === 'mercado' && (
-                    <div className="space-y-3">
-                      {/* Top Bar with Asset Selector */}
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <div className="flex items-center gap-3">
-                          {/* Asset Dropdown */}
-                          <Select value={selectedIbexCompany} onValueChange={(v) => { setSelectedIbexCompany(v); setSelectedPrediction(null); }}>
-                            <SelectTrigger className="w-[200px] h-9 text-sm font-medium border-2 border-emerald-500/50 bg-emerald-500/5">
-                              <SelectValue placeholder="Seleccionar activo..." />
+                          <Select defaultValue="week">
+                            <SelectTrigger className="w-[140px] h-8 text-xs">
+                              <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {ibexCompanies.map((company) => (
-                                <SelectItem key={company.id} value={company.id}>
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-bold text-emerald-500">{company.ticker}</span>
-                                    <span className="text-xs text-muted-foreground">{company.name}</span>
-                                    <span className={`ml-auto text-xs ${company.change >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                                      {company.change >= 0 ? '+' : ''}{company.change.toFixed(1)}%
-                                    </span>
-                                  </div>
-                                </SelectItem>
-                              ))}
+                              <SelectItem value="week">Esta semana</SelectItem>
+                              <SelectItem value="month">Este mes</SelectItem>
+                              <SelectItem value="quarter">Este trimestre</SelectItem>
                             </SelectContent>
                           </Select>
-                          
-                          {/* Current Price Display */}
-                          {(() => {
-                            const company = ibexCompanies.find(c => c.id === selectedIbexCompany);
-                            if (!company) return null;
-                            return (
-                              <div className="flex items-center gap-4">
-                                <div>
-                                  <span className="text-2xl font-bold">€{company.price.toFixed(2)}</span>
-                                  <span className={`ml-2 text-sm font-medium ${company.change >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                                    {company.change >= 0 ? <ArrowUpRight className="w-4 h-4 inline" /> : <ArrowDownRight className="w-4 h-4 inline" />}
-                                    {company.change >= 0 ? '+' : ''}{company.change.toFixed(2)} ({company.change >= 0 ? '+' : ''}{company.change.toFixed(1)}%)
-                                  </span>
-                                </div>
-                              </div>
-                            );
-                          })()}
                         </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs gap-1">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Mercado Abierto
-                          </Badge>
-                          <Badge variant="secondary" className="text-xs">220 velas</Badge>
-                        </div>
-                      </div>
-                      
-                      {/* Main Trading Chart */}
-                      <Card className="border-2 border-border/50">
-                        <CardContent className="p-0 relative">
-                          {(() => {
-                            const company = ibexCompanies.find(c => c.id === selectedIbexCompany);
-                            if (!company) return null;
-                            
-                            const visibleCandles = 60; // Show 60 candles at once
-                            const candleData = company.candleData;
-                            const startIndex = Math.max(0, candleData.length - visibleCandles - chartScrollOffset);
-                            const endIndex = Math.min(candleData.length, startIndex + visibleCandles);
-                            const visibleData = candleData.slice(startIndex, endIndex);
-                            
-                            const minPrice = Math.min(...visibleData.map(d => d.low)) * 0.995;
-                            const maxPrice = Math.max(...visibleData.map(d => d.high)) * 1.005;
-                            const priceRange = maxPrice - minPrice;
-                            const chartHeight = 320;
-                            const candleWidth = 100 / visibleCandles;
-                            
-                            // Get prediction for current company
-                            const currentPred = selectedPrediction || marketPredictions.find(p => p.asset === company.ticker);
-                            
-                            return (
-                              <div 
-                                className="relative bg-white rounded-lg overflow-hidden border"
-                                ref={chartContainerRef}
-                                onMouseMove={(e) => {
-                                  const rect = e.currentTarget.getBoundingClientRect();
-                                  const x = e.clientX - rect.left;
-                                  const y = e.clientY - rect.top;
-                                  const chartAreaLeft = 60;
-                                  const chartAreaWidth = rect.width - 80;
-                                  
-                                  if (x >= chartAreaLeft && x <= rect.width - 20) {
-                                    const candleIndex = Math.floor((x - chartAreaLeft) / (chartAreaWidth / visibleCandles));
-                                    const actualIndex = startIndex + candleIndex;
-                                    const candle = candleData[actualIndex];
-                                    
-                                    if (candle) {
-                                      const price = maxPrice - (y / chartHeight) * priceRange;
-                                      setCrosshairPos({
-                                        x, y,
-                                        visible: true,
-                                        price: price,
-                                        date: candle.date
-                                      });
-                                    }
-                                  }
-                                }}
-                                onMouseLeave={() => setCrosshairPos(prev => ({ ...prev, visible: false }))}
-                              >
-                                {/* Price Scale (Y-axis) - White theme */}
-                                <div className="absolute left-0 top-0 bottom-0 w-[60px] bg-gray-50 flex flex-col justify-between py-2 text-[10px] text-gray-600 border-r border-gray-200">
-                                  {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => (
-                                    <div key={i} className="px-2 text-right font-medium">
-                                      €{(maxPrice - ratio * priceRange).toFixed(2)}
-                                    </div>
-                                  ))}
-                                </div>
-                                
-                                {/* Chart Area - White background */}
-                                <div className="ml-[60px] mr-[20px] h-[320px] relative">
-                                  {/* Grid Lines */}
-                                  {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => (
-                                    <div 
-                                      key={i} 
-                                      className="absolute left-0 right-0 border-t border-gray-100"
-                                      style={{ top: `${ratio * 100}%` }}
-                                    />
-                                  ))}
-                                  
-                                  {/* SL/TP Lines if prediction selected */}
-                                  {currentPred && (
-                                    <>
-                                      {/* Take Profit Line */}
-                                      <div 
-                                        className="absolute left-0 right-0 border-t-2 border-dashed border-emerald-500 z-10"
-                                        style={{ top: `${((maxPrice - currentPred.takeProfit) / priceRange) * 100}%` }}
-                                      >
-                                        <div className="absolute right-0 -top-3 bg-emerald-500 text-white text-[9px] px-1 rounded">
-                                          TP €{currentPred.takeProfit.toFixed(2)}
-                                        </div>
-                                      </div>
-                                      {/* Entry Line */}
-                                      <div 
-                                        className="absolute left-0 right-0 border-t-2 border-dashed border-blue-500 z-10"
-                                        style={{ top: `${((maxPrice - currentPred.entry) / priceRange) * 100}%` }}
-                                      >
-                                        <div className="absolute right-0 -top-3 bg-blue-500 text-white text-[9px] px-1 rounded">
-                                          ENTRY €{currentPred.entry.toFixed(2)}
-                                        </div>
-                                      </div>
-                                      {/* Stop Loss Line */}
-                                      <div 
-                                        className="absolute left-0 right-0 border-t-2 border-dashed border-red-500 z-10"
-                                        style={{ top: `${((maxPrice - currentPred.stopLoss) / priceRange) * 100}%` }}
-                                      >
-                                        <div className="absolute right-0 -top-3 bg-red-500 text-white text-[9px] px-1 rounded">
-                                          SL €{currentPred.stopLoss.toFixed(2)}
-                                        </div>
-                                      </div>
-                                    </>
-                                  )}
-                                  
-                                  {/* Candles */}
-                                  <div className="flex h-full">
-                                    {visibleData.map((candle, i) => {
-                                      const isGreen = candle.close >= candle.open;
-                                      const bodyTop = ((maxPrice - Math.max(candle.open, candle.close)) / priceRange) * chartHeight;
-                                      const bodyHeight = Math.max(1, Math.abs(candle.close - candle.open) / priceRange * chartHeight);
-                                      const wickTop = ((maxPrice - candle.high) / priceRange) * chartHeight;
-                                      const wickBottom = ((maxPrice - candle.low) / priceRange) * chartHeight;
-                                      
-                                      return (
-                                        <div 
-                                          key={i} 
-                                          className="relative flex-1"
-                                          style={{ width: `${candleWidth}%` }}
-                                        >
-                                          {/* Wick */}
-                                          <div 
-                                            className={`absolute left-1/2 w-px ${isGreen ? 'bg-emerald-400' : 'bg-red-400'}`}
-                                            style={{ 
-                                              top: `${(wickTop / chartHeight) * 100}%`,
-                                              height: `${((wickBottom - wickTop) / chartHeight) * 100}%`
-                                            }}
-                                          />
-                                          {/* Body */}
-                                          <div 
-                                            className={`absolute left-[20%] w-[60%] ${isGreen ? 'bg-emerald-400' : 'bg-red-400'}`}
-                                            style={{ 
-                                              top: `${(bodyTop / chartHeight) * 100}%`,
-                                              height: `${Math.max(0.5, (bodyHeight / chartHeight) * 100)}%`
-                                            }}
-                                          />
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                  
-                                  {/* Crosshair - White theme */}
-                                  {crosshairPos.visible && (
-                                    <>
-                                      <div 
-                                        className="absolute top-0 bottom-0 w-px bg-gray-400 pointer-events-none"
-                                        style={{ left: `${crosshairPos.x - 60}px` }}
-                                      />
-                                      <div 
-                                        className="absolute left-0 right-0 h-px bg-gray-400 pointer-events-none"
-                                        style={{ top: `${crosshairPos.y}px` }}
-                                      />
-                                      {/* Price Label */}
-                                      <div 
-                                        className="absolute right-0 bg-emerald-500 text-white text-[10px] px-1.5 py-0.5 rounded pointer-events-none font-medium"
-                                        style={{ top: `${crosshairPos.y - 8}px` }}
-                                      >
-                                        €{crosshairPos.price.toFixed(2)}
-                                      </div>
-                                      {/* Date Label */}
-                                      <div 
-                                        className="absolute bottom-0 bg-gray-700 text-white text-[10px] px-1.5 py-0.5 rounded pointer-events-none font-medium"
-                                        style={{ left: `${crosshairPos.x - 60 - 30}px` }}
-                                      >
-                                        {crosshairPos.date}
-                                      </div>
-                                    </>
-                                  )}
-                                </div>
-                                
-                                {/* Time Scale (X-axis) - White theme */}
-                                <div className="ml-[60px] mr-[20px] h-[24px] bg-gray-50 flex items-center border-t border-gray-200">
-                                  <div className="flex w-full justify-between px-2 text-[9px] text-gray-600 font-medium">
-                                    {visibleData.filter((_, i) => i % 10 === 0).map((candle, i) => (
-                                      <span key={i}>{candle.date.slice(5)}</span>
-                                    ))}
-                                  </div>
-                                </div>
-                                
-                                {/* Scroll Controls */}
-                                <div className="absolute bottom-8 right-2 flex gap-1">
-                                  <Button 
-                                    variant="secondary" 
-                                    size="sm" 
-                                    className="h-6 w-6 p-0"
-                                    disabled={chartScrollOffset >= candleData.length - visibleCandles}
-                                    onClick={() => setChartScrollOffset(prev => Math.min(prev + 20, candleData.length - visibleCandles))}
-                                  >
-                                    <ArrowLeft className="w-3 h-3" />
-                                  </Button>
-                                  <Button 
-                                    variant="secondary" 
-                                    size="sm" 
-                                    className="h-6 w-6 p-0"
-                                    disabled={chartScrollOffset <= 0}
-                                    onClick={() => setChartScrollOffset(prev => Math.max(prev - 20, 0))}
-                                  >
-                                    <ArrowRight className="w-3 h-3" />
-                                  </Button>
-                                </div>
+
+                        {/* KPI Cards */}
+                        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                          {[
+                            { label: "Emails Procesados", value: "799", change: "+23%", icon: Mail, color: "emerald" },
+                            { label: "Llamadas Gestión", value: "278", change: "+15%", icon: Phone, color: "teal" },
+                            { label: "Tareas Completadas", value: "465", change: "+31%", icon: CheckCircle2, color: "cyan" },
+                            { label: "ROI Estimado", value: "+34%", change: "Objetivo: +25%", icon: TrendingUp, color: "purple" },
+                          ].map((stat, i) => (
+                            <Card key={i} className="p-3">
+                              <div className="flex items-center justify-between mb-1">
+                                <stat.icon className={`w-4 h-4 text-${stat.color}-500`} />
+                                <Badge variant="outline" className="text-[10px]">{stat.change}</Badge>
                               </div>
-                            );
-                          })()}
-                        </CardContent>
-                      </Card>
-                      
-                      {/* MEJORA 1: Market Summary KPIs */}
-                      <div className="grid grid-cols-5 gap-2">
-                        {[
-                          { label: "IBEX 35", value: "11,847.32", change: "+1.2%", positive: true },
-                          { label: "Volumen", value: "€2.4B", change: "+15%", positive: true },
-                          { label: "Volatilidad", value: "18.5%", change: "Media", positive: null },
-                          { label: "Advancers", value: "28", change: "vs 7", positive: true },
-                          { label: "Spread", value: "0.02%", change: "Bajo", positive: true },
-                        ].map((kpi, i) => (
-                          <Card key={i} className="p-2">
-                            <div className="text-[10px] text-muted-foreground">{kpi.label}</div>
-                            <div className="text-lg font-bold">{kpi.value}</div>
-                            <div className={`text-[10px] ${kpi.positive === true ? 'text-emerald-500' : kpi.positive === false ? 'text-red-500' : 'text-muted-foreground'}`}>{kpi.change}</div>
+                              <div className="text-xl font-bold">{stat.value}</div>
+                              <div className="text-[10px] text-muted-foreground">{stat.label}</div>
+                            </Card>
+                          ))}
+                        </div>
+
+                        {/* Charts Grid */}
+                        <div className="grid lg:grid-cols-2 gap-3">
+                          <Card>
+                            <CardHeader className="pb-1 pt-3">
+                              <CardTitle className="text-xs">Actividad Semanal</CardTitle>
+                            </CardHeader>
+                            <CardContent className="pb-3">
+                              <ChartContainer config={{
+                                emails: { label: "Emails", color: "#10b981" },
+                                llamadas: { label: "Llamadas", color: "#14b8a6" },
+                                tareas: { label: "Tareas", color: "#06b6d4" },
+                              }} className="h-[160px]">
+                                <BarChart data={analyticsData}>
+                                  <XAxis dataKey="name" fontSize={9} />
+                                  <YAxis fontSize={9} />
+                                  <ChartTooltip content={<ChartTooltipContent />} />
+                                  <Bar dataKey="emails" fill="#10b981" radius={[3, 3, 0, 0]} />
+                                  <Bar dataKey="llamadas" fill="#14b8a6" radius={[3, 3, 0, 0]} />
+                                  <Bar dataKey="tareas" fill="#06b6d4" radius={[3, 3, 0, 0]} />
+                                </BarChart>
+                              </ChartContainer>
+                            </CardContent>
                           </Card>
-                        ))}
-                      </div>
-                      
-                      {/* MEJORA 2: Technical Indicators */}
-                      <Card>
-                        <CardHeader className="pb-2 pt-3">
-                          <CardTitle className="text-xs flex items-center gap-1">
-                            <Activity className="w-3 h-3 text-blue-500" />
-                            Indicadores Técnicos
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-2 pt-0">
-                          <div className="grid grid-cols-4 gap-3">
-                            {[
-                              { name: "RSI (14)", value: "62.5", signal: "Neutral", color: "text-yellow-500" },
-                              { name: "MACD", value: "0.15", signal: "Alcista", color: "text-emerald-500" },
-                              { name: "SMA 20", value: "4.48", signal: "Por encima", color: "text-emerald-500" },
-                              { name: "EMA 50", value: "4.35", signal: "Soporte", color: "text-emerald-500" },
-                            ].map((ind, i) => (
-                              <div key={i} className="p-2 bg-muted/30 rounded-lg text-center">
-                                <div className="text-[10px] text-muted-foreground">{ind.name}</div>
-                                <div className="text-sm font-bold">{ind.value}</div>
-                                <div className={`text-[10px] ${ind.color}`}>{ind.signal}</div>
-                              </div>
-                            ))}
-                          </div>
-                        </CardContent>
-                      </Card>
-                      
-                      {/* MEJORA 3: Market Sentiment */}
-                      <div className="grid lg:grid-cols-2 gap-3">
-                        <Card>
-                          <CardHeader className="pb-2 pt-3">
-                            <CardTitle className="text-xs flex items-center gap-1">
-                              <PieChartIcon className="w-3 h-3 text-purple-500" />
-                              Sentimiento de Mercado
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="p-2 pt-0">
-                            <div className="flex items-center gap-4">
-                              <div className="relative w-20 h-20">
-                                <svg viewBox="0 0 36 36" className="w-full h-full">
-                                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#10b981" strokeWidth="3" strokeDasharray="65, 100" />
-                                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#eab308" strokeWidth="3" strokeDasharray="25, 100" strokeDashoffset="-65" />
-                                  <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#ef4444" strokeWidth="3" strokeDasharray="10, 100" strokeDashoffset="-90" />
-                                </svg>
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                  <span className="text-sm font-bold">65%</span>
-                                </div>
-                              </div>
-                              <div className="flex-1 space-y-2">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-3 h-3 rounded bg-emerald-500" />
-                                  <span className="text-xs">Alcista (65%)</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <div className="w-3 h-3 rounded bg-yellow-500" />
-                                  <span className="text-xs">Neutral (25%)</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <div className="w-3 h-3 rounded bg-red-500" />
-                                  <span className="text-xs">Bajista (10%)</span>
-                                </div>
-                              </div>
+
+                          <Card>
+                            <CardHeader className="pb-1 pt-3">
+                              <CardTitle className="text-xs flex items-center gap-1">
+                                <TrendingUp className="w-3 h-3 text-emerald-500" />
+                                Tendencia de Rendimiento
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="pb-3">
+                              <ChartContainer config={{
+                                rendimiento: { label: "Rendimiento", color: "#10b981" },
+                              }} className="h-[160px]">
+                                <RechartsLineChart data={[
+                                  { name: "Ene", rendimiento: 65 },
+                                  { name: "Feb", rendimiento: 72 },
+                                  { name: "Mar", rendimiento: 68 },
+                                  { name: "Abr", rendimiento: 78 },
+                                  { name: "May", rendimiento: 85 },
+                                  { name: "Jun", rendimiento: 92 },
+                                  { name: "Jul", rendimiento: 88 },
+                                ]}>
+                                  <XAxis dataKey="name" fontSize={9} />
+                                  <YAxis fontSize={9} />
+                                  <ChartTooltip content={<ChartTooltipContent />} />
+                                  <Line type="monotone" dataKey="rendimiento" stroke="#10b981" strokeWidth={2} dot={{ fill: "#10b981", r: 3 }} />
+                                </RechartsLineChart>
+                              </ChartContainer>
+                            </CardContent>
+                          </Card>
+                        </div>
+
+                        {/* Token & Revenue */}
+                        <div className="grid lg:grid-cols-3 gap-3">
+                          <Card className="p-3">
+                            <div className="text-xs font-medium flex items-center gap-1 mb-2">
+                              <Cpu className="w-3 h-3 text-purple-500" /> Consumo de Tokens
                             </div>
-                          </CardContent>
-                        </Card>
-                        
-                        {/* MEJORA 4: Price Alerts */}
-                        <Card>
-                          <CardHeader className="pb-2 pt-3">
-                            <CardTitle className="text-xs flex items-center gap-1">
-                              <Bell className="w-3 h-3 text-orange-500" />
-                              Alertas de Precio Activas
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="p-2 pt-0">
-                            <div className="space-y-2">
-                              {[
-                                { asset: "SAN", type: "Encima", price: "€4.60", status: "Activa" },
-                                { asset: "BBVA", type: "Debajo", price: "€12.50", status: "Activa" },
-                                { asset: "IBE", type: "Encima", price: "€13.80", status: "Disparada" },
-                              ].map((alert, i) => (
-                                <div key={i} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
-                                  <div className="flex items-center gap-2">
-                                    <Badge variant="outline" className="text-[10px]">{alert.asset}</Badge>
-                                    <span className="text-xs">{alert.type} {alert.price}</span>
-                                  </div>
-                                  <Badge className={`text-[10px] ${alert.status === 'Disparada' ? 'bg-red-500' : 'bg-emerald-500'}`}>{alert.status}</Badge>
+                            <div className="text-2xl font-bold mb-1">1.2M</div>
+                            <Progress value={72} className="h-1.5 mb-1" />
+                            <div className="text-[10px] text-muted-foreground">72% del límite mensual</div>
+                          </Card>
+
+                          <Card className="p-3">
+                            <div className="text-xs font-medium flex items-center gap-1 mb-2">
+                              <Bot className="w-3 h-3 text-emerald-500" /> Rendimiento Agentes
+                            </div>
+                            <div className="space-y-1.5">
+                              {userAgents.slice(0, 3).map((agent: any) => (
+                                <div key={agent.id} className="flex items-center gap-2">
+                                  <span className="text-[10px] flex-1 truncate">{agent.name}</span>
+                                  <span className="text-[10px] font-medium text-emerald-500">{agent.stats.success}%</span>
                                 </div>
                               ))}
                             </div>
-                          </CardContent>
-                        </Card>
-                      </div>
-                      
-                      {/* MEJORA 5: News Feed */}
-                      <Card>
-                        <CardHeader className="pb-2 pt-3">
-                          <CardTitle className="text-xs flex items-center gap-1">
-                            <Newspaper className="w-3 h-3 text-yellow-500" />
-                            Noticias Relevantes
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-2 pt-0">
-                          <div className="grid grid-cols-3 gap-2">
-                            {[
-                              { title: "Banco Central mantiene tipos", source: "Bloomberg", time: "10:32", impact: "positive" },
-                              { title: "IBEX abre con ganancias", source: "Expansión", time: "09:15", impact: "positive" },
-                              { title: "Volatilidad baja en Europa", source: "Reuters", time: "08:45", impact: "neutral" },
-                            ].map((news, i) => (
-                              <div key={i} className="p-2 bg-muted/30 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors">
-                                <div className="text-xs font-medium mb-1 line-clamp-2">{news.title}</div>
-                                <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                                  <span>{news.source}</span>
-                                  <span>{news.time}</span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </CardContent>
-                      </Card>
-                      
-                      {/* Trading Panel Below Chart */}
-                      <div className="grid lg:grid-cols-3 gap-3">
-                        {/* Trading Predictions - Clickable to show on chart */}
-                        <Card className="lg:col-span-2">
-                          <CardHeader className="pb-2 pt-3">
-                            <CardTitle className="text-xs flex items-center gap-1">
-                              <Target className="w-3 h-3 text-emerald-500" />
-                              Señales de Trading - Click para ver en gráfico
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="p-2 pt-0">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                              {marketPredictions.map((pred) => {
-                                const company = ibexCompanies.find(c => c.ticker === pred.asset);
-                                return (
-                                  <div 
-                                    key={pred.id} 
-                                    onClick={() => {
-                                      if (company) {
-                                        setSelectedIbexCompany(company.id);
-                                        setSelectedPrediction(pred);
-                                      }
-                                    }}
-                                    className={`p-2 rounded-lg cursor-pointer transition-all border ${
-                                      selectedPrediction?.id === pred.id 
-                                        ? 'bg-emerald-500/20 border-emerald-500' 
-                                        : 'bg-muted/30 border-transparent hover:bg-muted/50'
-                                    }`}
-                                  >
-                                    <div className="flex items-center justify-between mb-1">
-                                      <div className="flex items-center gap-1">
-                                        <Badge className={`text-[8px] h-4 ${
-                                          pred.direction === 'long' ? 'bg-emerald-500' : 
-                                          pred.direction === 'short' ? 'bg-red-500' : 'bg-yellow-500'
-                                        }`}>
-                                          {pred.direction.toUpperCase()}
-                                        </Badge>
-                                        <span className="text-xs font-bold">{pred.asset}</span>
-                                      </div>
-                                      <span className={`text-[9px] ${pred.confidence >= 75 ? 'text-emerald-500' : pred.confidence >= 60 ? 'text-yellow-500' : 'text-red-500'}`}>
-                                        {pred.confidence}%
+                          </Card>
+
+                          <Card className="p-3">
+                            <div className="text-xs font-medium flex items-center gap-1 mb-2">
+                              <DollarSign className="w-3 h-3 text-yellow-500" /> Desglose de Ingresos
+                            </div>
+                            <div className="text-2xl font-bold mb-1">€49,000</div>
+                            <div className="text-[10px] text-muted-foreground">+18% vs mes anterior</div>
+                          </Card>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Analíticas de Mercado Tab - Professional Trading Interface */}
+                    {analyticsTab === 'mercado' && (
+                      <div className="space-y-3">
+                        {/* Top Bar with Asset Selector */}
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <div className="flex items-center gap-3">
+                            {/* Asset Dropdown */}
+                            <Select value={selectedIbexCompany} onValueChange={(v) => { setSelectedIbexCompany(v); setSelectedPrediction(null); }}>
+                              <SelectTrigger className="w-[200px] h-9 text-sm font-medium border-2 border-emerald-500/50 bg-emerald-500/5">
+                                <SelectValue placeholder="Seleccionar activo..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {ibexCompanies.map((company) => (
+                                  <SelectItem key={company.id} value={company.id}>
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-bold text-emerald-500">{company.ticker}</span>
+                                      <span className="text-xs text-muted-foreground">{company.name}</span>
+                                      <span className={`ml-auto text-xs ${company.change >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                                        {company.change >= 0 ? '+' : ''}{company.change.toFixed(1)}%
                                       </span>
                                     </div>
-                                    <div className="grid grid-cols-3 gap-1 text-[8px]">
-                                      <div className="text-center">
-                                        <span className="text-muted-foreground">Entry</span>
-                                        <div className="font-bold">€{pred.entry.toFixed(2)}</div>
-                                      </div>
-                                      <div className="text-center">
-                                        <span className="text-emerald-500">TP</span>
-                                        <div className="font-bold text-emerald-500">€{pred.takeProfit.toFixed(2)}</div>
-                                      </div>
-                                      <div className="text-center">
-                                        <span className="text-red-500">SL</span>
-                                        <div className="font-bold text-red-500">€{pred.stopLoss.toFixed(2)}</div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </CardContent>
-                        </Card>
-                        
-                        {/* Quick Stats */}
-                        <Card>
-                          <CardHeader className="pb-2 pt-3">
-                            <CardTitle className="text-xs flex items-center gap-1">
-                              <Activity className="w-3 h-3 text-emerald-500" />
-                              Info del Activo
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="p-2 pt-0">
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+
+                            {/* Current Price Display */}
                             {(() => {
                               const company = ibexCompanies.find(c => c.id === selectedIbexCompany);
-                              const pred = selectedPrediction || marketPredictions.find(p => p.asset === company?.ticker);
                               if (!company) return null;
-                              
                               return (
-                                <div className="space-y-2">
-                                  <div className="grid grid-cols-2 gap-2">
-                                    <div className="p-2 bg-muted/30 rounded-lg">
-                                      <div className="text-[9px] text-muted-foreground">Volumen</div>
-                                      <div className="text-sm font-bold">{company.volume}</div>
-                                    </div>
-                                    <div className="p-2 bg-muted/30 rounded-lg">
-                                      <div className="text-[9px] text-muted-foreground">Variación</div>
-                                      <div className={`text-sm font-bold ${company.change >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                                        {company.change >= 0 ? '+' : ''}{company.change.toFixed(1)}%
+                                <div className="flex items-center gap-4">
+                                  <div>
+                                    <span className="text-2xl font-bold">€{company.price.toFixed(2)}</span>
+                                    <span className={`ml-2 text-sm font-medium ${company.change >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                                      {company.change >= 0 ? <ArrowUpRight className="w-4 h-4 inline" /> : <ArrowDownRight className="w-4 h-4 inline" />}
+                                      {company.change >= 0 ? '+' : ''}{company.change.toFixed(2)} ({company.change >= 0 ? '+' : ''}{company.change.toFixed(1)}%)
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs gap-1">
+                              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Mercado Abierto
+                            </Badge>
+                            <Badge variant="secondary" className="text-xs">220 velas</Badge>
+                          </div>
+                        </div>
+
+                        {/* Main Trading Chart */}
+                        <Card className="border-2 border-border/50">
+                          <CardContent className="p-0 relative">
+                            {(() => {
+                              const company = ibexCompanies.find(c => c.id === selectedIbexCompany);
+                              if (!company) return null;
+
+                              const visibleCandles = 60; // Show 60 candles at once
+                              const candleData = company.candleData;
+                              const startIndex = Math.max(0, candleData.length - visibleCandles - chartScrollOffset);
+                              const endIndex = Math.min(candleData.length, startIndex + visibleCandles);
+                              const visibleData = candleData.slice(startIndex, endIndex);
+
+                              const minPrice = Math.min(...visibleData.map(d => d.low)) * 0.995;
+                              const maxPrice = Math.max(...visibleData.map(d => d.high)) * 1.005;
+                              const priceRange = maxPrice - minPrice;
+                              const chartHeight = 320;
+                              const candleWidth = 100 / visibleCandles;
+
+                              // Get prediction for current company
+                              const currentPred = selectedPrediction || marketPredictions.find(p => p.asset === company.ticker);
+
+                              return (
+                                <div
+                                  className="relative bg-white rounded-lg overflow-hidden border"
+                                  ref={chartContainerRef}
+                                  onMouseMove={(e) => {
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    const x = e.clientX - rect.left;
+                                    const y = e.clientY - rect.top;
+                                    const chartAreaLeft = 60;
+                                    const chartAreaWidth = rect.width - 80;
+
+                                    if (x >= chartAreaLeft && x <= rect.width - 20) {
+                                      const candleIndex = Math.floor((x - chartAreaLeft) / (chartAreaWidth / visibleCandles));
+                                      const actualIndex = startIndex + candleIndex;
+                                      const candle = candleData[actualIndex];
+
+                                      if (candle) {
+                                        const price = maxPrice - (y / chartHeight) * priceRange;
+                                        setCrosshairPos({
+                                          x, y,
+                                          visible: true,
+                                          price: price,
+                                          date: candle.date
+                                        });
+                                      }
+                                    }
+                                  }}
+                                  onMouseLeave={() => setCrosshairPos(prev => ({ ...prev, visible: false }))}
+                                >
+                                  {/* Price Scale (Y-axis) - White theme */}
+                                  <div className="absolute left-0 top-0 bottom-0 w-[60px] bg-gray-50 flex flex-col justify-between py-2 text-[10px] text-gray-600 border-r border-gray-200">
+                                    {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => (
+                                      <div key={i} className="px-2 text-right font-medium">
+                                        €{(maxPrice - ratio * priceRange).toFixed(2)}
                                       </div>
+                                    ))}
+                                  </div>
+
+                                  {/* Chart Area - White background */}
+                                  <div className="ml-[60px] mr-[20px] h-[320px] relative">
+                                    {/* Grid Lines */}
+                                    {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => (
+                                      <div
+                                        key={i}
+                                        className="absolute left-0 right-0 border-t border-gray-100"
+                                        style={{ top: `${ratio * 100}%` }}
+                                      />
+                                    ))}
+
+                                    {/* SL/TP Lines if prediction selected */}
+                                    {currentPred && (
+                                      <>
+                                        {/* Take Profit Line */}
+                                        <div
+                                          className="absolute left-0 right-0 border-t-2 border-dashed border-emerald-500 z-10"
+                                          style={{ top: `${((maxPrice - currentPred.takeProfit) / priceRange) * 100}%` }}
+                                        >
+                                          <div className="absolute right-0 -top-3 bg-emerald-500 text-white text-[9px] px-1 rounded">
+                                            TP €{currentPred.takeProfit.toFixed(2)}
+                                          </div>
+                                        </div>
+                                        {/* Entry Line */}
+                                        <div
+                                          className="absolute left-0 right-0 border-t-2 border-dashed border-blue-500 z-10"
+                                          style={{ top: `${((maxPrice - currentPred.entry) / priceRange) * 100}%` }}
+                                        >
+                                          <div className="absolute right-0 -top-3 bg-blue-500 text-white text-[9px] px-1 rounded">
+                                            ENTRY €{currentPred.entry.toFixed(2)}
+                                          </div>
+                                        </div>
+                                        {/* Stop Loss Line */}
+                                        <div
+                                          className="absolute left-0 right-0 border-t-2 border-dashed border-red-500 z-10"
+                                          style={{ top: `${((maxPrice - currentPred.stopLoss) / priceRange) * 100}%` }}
+                                        >
+                                          <div className="absolute right-0 -top-3 bg-red-500 text-white text-[9px] px-1 rounded">
+                                            SL €{currentPred.stopLoss.toFixed(2)}
+                                          </div>
+                                        </div>
+                                      </>
+                                    )}
+
+                                    {/* Candles */}
+                                    <div className="flex h-full">
+                                      {visibleData.map((candle, i) => {
+                                        const isGreen = candle.close >= candle.open;
+                                        const bodyTop = ((maxPrice - Math.max(candle.open, candle.close)) / priceRange) * chartHeight;
+                                        const bodyHeight = Math.max(1, Math.abs(candle.close - candle.open) / priceRange * chartHeight);
+                                        const wickTop = ((maxPrice - candle.high) / priceRange) * chartHeight;
+                                        const wickBottom = ((maxPrice - candle.low) / priceRange) * chartHeight;
+
+                                        return (
+                                          <div
+                                            key={i}
+                                            className="relative flex-1"
+                                            style={{ width: `${candleWidth}%` }}
+                                          >
+                                            {/* Wick */}
+                                            <div
+                                              className={`absolute left-1/2 w-px ${isGreen ? 'bg-emerald-400' : 'bg-red-400'}`}
+                                              style={{
+                                                top: `${(wickTop / chartHeight) * 100}%`,
+                                                height: `${((wickBottom - wickTop) / chartHeight) * 100}%`
+                                              }}
+                                            />
+                                            {/* Body */}
+                                            <div
+                                              className={`absolute left-[20%] w-[60%] ${isGreen ? 'bg-emerald-400' : 'bg-red-400'}`}
+                                              style={{
+                                                top: `${(bodyTop / chartHeight) * 100}%`,
+                                                height: `${Math.max(0.5, (bodyHeight / chartHeight) * 100)}%`
+                                              }}
+                                            />
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+
+                                    {/* Crosshair - White theme */}
+                                    {crosshairPos.visible && (
+                                      <>
+                                        <div
+                                          className="absolute top-0 bottom-0 w-px bg-gray-400 pointer-events-none"
+                                          style={{ left: `${crosshairPos.x - 60}px` }}
+                                        />
+                                        <div
+                                          className="absolute left-0 right-0 h-px bg-gray-400 pointer-events-none"
+                                          style={{ top: `${crosshairPos.y}px` }}
+                                        />
+                                        {/* Price Label */}
+                                        <div
+                                          className="absolute right-0 bg-emerald-500 text-white text-[10px] px-1.5 py-0.5 rounded pointer-events-none font-medium"
+                                          style={{ top: `${crosshairPos.y - 8}px` }}
+                                        >
+                                          €{crosshairPos.price.toFixed(2)}
+                                        </div>
+                                        {/* Date Label */}
+                                        <div
+                                          className="absolute bottom-0 bg-gray-700 text-white text-[10px] px-1.5 py-0.5 rounded pointer-events-none font-medium"
+                                          style={{ left: `${crosshairPos.x - 60 - 30}px` }}
+                                        >
+                                          {crosshairPos.date}
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+
+                                  {/* Time Scale (X-axis) - White theme */}
+                                  <div className="ml-[60px] mr-[20px] h-[24px] bg-gray-50 flex items-center border-t border-gray-200">
+                                    <div className="flex w-full justify-between px-2 text-[9px] text-gray-600 font-medium">
+                                      {visibleData.filter((_, i) => i % 10 === 0).map((candle, i) => (
+                                        <span key={i}>{candle.date.slice(5)}</span>
+                                      ))}
                                     </div>
                                   </div>
-                                  
-                                  {pred && (
-                                    <div className="p-2 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-lg border border-emerald-500/20">
-                                      <div className="text-[10px] font-semibold mb-1">Señal Activa</div>
-                                      <div className="flex items-center justify-between text-[9px]">
-                                        <span>R/R Ratio</span>
-                                        <span className="font-bold text-emerald-500">
-                                          {((pred.takeProfit - pred.entry) / (pred.entry - pred.stopLoss)).toFixed(2)}
-                                        </span>
-                                      </div>
-                                      <div className="flex items-center justify-between text-[9px]">
-                                        <span>Expiración</span>
-                                        <span className="font-medium">{pred.expiration}</span>
-                                      </div>
-                                    </div>
-                                  )}
-                                  
-                                  <Button size="sm" className="w-full h-8 text-xs bg-emerald-500 hover:bg-emerald-600">
-                                    <Zap className="w-3 h-3 mr-1" /> Nueva Predicción
-                                  </Button>
+
+                                  {/* Scroll Controls */}
+                                  <div className="absolute bottom-8 right-2 flex gap-1">
+                                    <Button
+                                      variant="secondary"
+                                      size="sm"
+                                      className="h-6 w-6 p-0"
+                                      disabled={chartScrollOffset >= candleData.length - visibleCandles}
+                                      onClick={() => setChartScrollOffset(prev => Math.min(prev + 20, candleData.length - visibleCandles))}
+                                    >
+                                      <ArrowLeft className="w-3 h-3" />
+                                    </Button>
+                                    <Button
+                                      variant="secondary"
+                                      size="sm"
+                                      className="h-6 w-6 p-0"
+                                      disabled={chartScrollOffset <= 0}
+                                      onClick={() => setChartScrollOffset(prev => Math.max(prev - 20, 0))}
+                                    >
+                                      <ArrowRight className="w-3 h-3" />
+                                    </Button>
+                                  </div>
                                 </div>
                               );
                             })()}
                           </CardContent>
                         </Card>
+
+                        {/* MEJORA 1: Market Summary KPIs */}
+                        <div className="grid grid-cols-5 gap-2">
+                          {[
+                            { label: "IBEX 35", value: "11,847.32", change: "+1.2%", positive: true },
+                            { label: "Volumen", value: "€2.4B", change: "+15%", positive: true },
+                            { label: "Volatilidad", value: "18.5%", change: "Media", positive: null },
+                            { label: "Advancers", value: "28", change: "vs 7", positive: true },
+                            { label: "Spread", value: "0.02%", change: "Bajo", positive: true },
+                          ].map((kpi, i) => (
+                            <Card key={i} className="p-2">
+                              <div className="text-[10px] text-muted-foreground">{kpi.label}</div>
+                              <div className="text-lg font-bold">{kpi.value}</div>
+                              <div className={`text-[10px] ${kpi.positive === true ? 'text-emerald-500' : kpi.positive === false ? 'text-red-500' : 'text-muted-foreground'}`}>{kpi.change}</div>
+                            </Card>
+                          ))}
+                        </div>
+
+                        {/* MEJORA 2: Technical Indicators */}
+                        <Card>
+                          <CardHeader className="pb-2 pt-3">
+                            <CardTitle className="text-xs flex items-center gap-1">
+                              <Activity className="w-3 h-3 text-blue-500" />
+                              Indicadores Técnicos
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="p-2 pt-0">
+                            <div className="grid grid-cols-4 gap-3">
+                              {[
+                                { name: "RSI (14)", value: "62.5", signal: "Neutral", color: "text-yellow-500" },
+                                { name: "MACD", value: "0.15", signal: "Alcista", color: "text-emerald-500" },
+                                { name: "SMA 20", value: "4.48", signal: "Por encima", color: "text-emerald-500" },
+                                { name: "EMA 50", value: "4.35", signal: "Soporte", color: "text-emerald-500" },
+                              ].map((ind, i) => (
+                                <div key={i} className="p-2 bg-muted/30 rounded-lg text-center">
+                                  <div className="text-[10px] text-muted-foreground">{ind.name}</div>
+                                  <div className="text-sm font-bold">{ind.value}</div>
+                                  <div className={`text-[10px] ${ind.color}`}>{ind.signal}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* MEJORA 3: Market Sentiment */}
+                        <div className="grid lg:grid-cols-2 gap-3">
+                          <Card>
+                            <CardHeader className="pb-2 pt-3">
+                              <CardTitle className="text-xs flex items-center gap-1">
+                                <PieChartIcon className="w-3 h-3 text-purple-500" />
+                                Sentimiento de Mercado
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-2 pt-0">
+                              <div className="flex items-center gap-4">
+                                <div className="relative w-20 h-20">
+                                  <svg viewBox="0 0 36 36" className="w-full h-full">
+                                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#10b981" strokeWidth="3" strokeDasharray="65, 100" />
+                                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#eab308" strokeWidth="3" strokeDasharray="25, 100" strokeDashoffset="-65" />
+                                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#ef4444" strokeWidth="3" strokeDasharray="10, 100" strokeDashoffset="-90" />
+                                  </svg>
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <span className="text-sm font-bold">65%</span>
+                                  </div>
+                                </div>
+                                <div className="flex-1 space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded bg-emerald-500" />
+                                    <span className="text-xs">Alcista (65%)</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded bg-yellow-500" />
+                                    <span className="text-xs">Neutral (25%)</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded bg-red-500" />
+                                    <span className="text-xs">Bajista (10%)</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+
+                          {/* MEJORA 4: Price Alerts */}
+                          <Card>
+                            <CardHeader className="pb-2 pt-3">
+                              <CardTitle className="text-xs flex items-center gap-1">
+                                <Bell className="w-3 h-3 text-orange-500" />
+                                Alertas de Precio Activas
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-2 pt-0">
+                              <div className="space-y-2">
+                                {[
+                                  { asset: "SAN", type: "Encima", price: "€4.60", status: "Activa" },
+                                  { asset: "BBVA", type: "Debajo", price: "€12.50", status: "Activa" },
+                                  { asset: "IBE", type: "Encima", price: "€13.80", status: "Disparada" },
+                                ].map((alert, i) => (
+                                  <div key={i} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                                    <div className="flex items-center gap-2">
+                                      <Badge variant="outline" className="text-[10px]">{alert.asset}</Badge>
+                                      <span className="text-xs">{alert.type} {alert.price}</span>
+                                    </div>
+                                    <Badge className={`text-[10px] ${alert.status === 'Disparada' ? 'bg-red-500' : 'bg-emerald-500'}`}>{alert.status}</Badge>
+                                  </div>
+                                ))}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </div>
+
+                        {/* MEJORA 5: News Feed */}
+                        <Card>
+                          <CardHeader className="pb-2 pt-3">
+                            <CardTitle className="text-xs flex items-center gap-1">
+                              <Newspaper className="w-3 h-3 text-yellow-500" />
+                              Noticias Relevantes
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="p-2 pt-0">
+                            <div className="grid grid-cols-3 gap-2">
+                              {[
+                                { title: "Banco Central mantiene tipos", source: "Bloomberg", time: "10:32", impact: "positive" },
+                                { title: "IBEX abre con ganancias", source: "Expansión", time: "09:15", impact: "positive" },
+                                { title: "Volatilidad baja en Europa", source: "Reuters", time: "08:45", impact: "neutral" },
+                              ].map((news, i) => (
+                                <div key={i} className="p-2 bg-muted/30 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors">
+                                  <div className="text-xs font-medium mb-1 line-clamp-2">{news.title}</div>
+                                  <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                                    <span>{news.source}</span>
+                                    <span>{news.time}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* Trading Panel Below Chart */}
+                        <div className="grid lg:grid-cols-3 gap-3">
+                          {/* Trading Predictions - Clickable to show on chart */}
+                          <Card className="lg:col-span-2">
+                            <CardHeader className="pb-2 pt-3">
+                              <CardTitle className="text-xs flex items-center gap-1">
+                                <Target className="w-3 h-3 text-emerald-500" />
+                                Señales de Trading - Click para ver en gráfico
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-2 pt-0">
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                {marketPredictions.map((pred) => {
+                                  const company = ibexCompanies.find(c => c.ticker === pred.asset);
+                                  return (
+                                    <div
+                                      key={pred.id}
+                                      onClick={() => {
+                                        if (company) {
+                                          setSelectedIbexCompany(company.id);
+                                          setSelectedPrediction(pred);
+                                        }
+                                      }}
+                                      className={`p-2 rounded-lg cursor-pointer transition-all border ${selectedPrediction?.id === pred.id
+                                        ? 'bg-emerald-500/20 border-emerald-500'
+                                        : 'bg-muted/30 border-transparent hover:bg-muted/50'
+                                        }`}
+                                    >
+                                      <div className="flex items-center justify-between mb-1">
+                                        <div className="flex items-center gap-1">
+                                          <Badge className={`text-[8px] h-4 ${pred.direction === 'long' ? 'bg-emerald-500' :
+                                            pred.direction === 'short' ? 'bg-red-500' : 'bg-yellow-500'
+                                            }`}>
+                                            {pred.direction.toUpperCase()}
+                                          </Badge>
+                                          <span className="text-xs font-bold">{pred.asset}</span>
+                                        </div>
+                                        <span className={`text-[9px] ${pred.confidence >= 75 ? 'text-emerald-500' : pred.confidence >= 60 ? 'text-yellow-500' : 'text-red-500'}`}>
+                                          {pred.confidence}%
+                                        </span>
+                                      </div>
+                                      <div className="grid grid-cols-3 gap-1 text-[8px]">
+                                        <div className="text-center">
+                                          <span className="text-muted-foreground">Entry</span>
+                                          <div className="font-bold">€{pred.entry.toFixed(2)}</div>
+                                        </div>
+                                        <div className="text-center">
+                                          <span className="text-emerald-500">TP</span>
+                                          <div className="font-bold text-emerald-500">€{pred.takeProfit.toFixed(2)}</div>
+                                        </div>
+                                        <div className="text-center">
+                                          <span className="text-red-500">SL</span>
+                                          <div className="font-bold text-red-500">€{pred.stopLoss.toFixed(2)}</div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </CardContent>
+                          </Card>
+
+                          {/* Quick Stats */}
+                          <Card>
+                            <CardHeader className="pb-2 pt-3">
+                              <CardTitle className="text-xs flex items-center gap-1">
+                                <Activity className="w-3 h-3 text-emerald-500" />
+                                Info del Activo
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-2 pt-0">
+                              {(() => {
+                                const company = ibexCompanies.find(c => c.id === selectedIbexCompany);
+                                const pred = selectedPrediction || marketPredictions.find(p => p.asset === company?.ticker);
+                                if (!company) return null;
+
+                                return (
+                                  <div className="space-y-2">
+                                    <div className="grid grid-cols-2 gap-2">
+                                      <div className="p-2 bg-muted/30 rounded-lg">
+                                        <div className="text-[9px] text-muted-foreground">Volumen</div>
+                                        <div className="text-sm font-bold">{company.volume}</div>
+                                      </div>
+                                      <div className="p-2 bg-muted/30 rounded-lg">
+                                        <div className="text-[9px] text-muted-foreground">Variación</div>
+                                        <div className={`text-sm font-bold ${company.change >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                                          {company.change >= 0 ? '+' : ''}{company.change.toFixed(1)}%
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {pred && (
+                                      <div className="p-2 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-lg border border-emerald-500/20">
+                                        <div className="text-[10px] font-semibold mb-1">Señal Activa</div>
+                                        <div className="flex items-center justify-between text-[9px]">
+                                          <span>R/R Ratio</span>
+                                          <span className="font-bold text-emerald-500">
+                                            {((pred.takeProfit - pred.entry) / (pred.entry - pred.stopLoss)).toFixed(2)}
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center justify-between text-[9px]">
+                                          <span>Expiración</span>
+                                          <span className="font-medium">{pred.expiration}</span>
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    <Button size="sm" className="w-full h-8 text-xs bg-emerald-500 hover:bg-emerald-600">
+                                      <Zap className="w-3 h-3 mr-1" /> Nueva Predicción
+                                    </Button>
+                                  </div>
+                                );
+                              })()}
+                            </CardContent>
+                          </Card>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              )}
+                    )}
+                  </div>
+                )}
               </div>
             </ResizablePanel>
-            
+
             <ResizableHandle withHandle className="bg-emerald-500/20 hover:bg-emerald-500/40 transition-colors" />
-            
+
             {/* Chat Panel */}
             <ResizablePanel defaultSize={30} minSize={25} maxSize={50} className="overflow-hidden p-2">
               <Card className="h-full flex flex-col shadow-lg" onMouseEnter={() => setCursorType('chat')} onMouseLeave={() => setCursorType('default')}>
@@ -5615,7 +5639,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
                       </Button>
                     </div>
                   </div>
-                  
+
                   {/* Agent Selector - Bigger and Highlighted */}
                   <div className="mt-3">
                     {chatMode === "single" && (
@@ -5641,7 +5665,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
                       <Button variant={chatMode === "group" ? "default" : "ghost"} size="sm" onClick={() => setChatMode("group")} className={`h-8 text-xs ${chatMode === "group" ? "bg-emerald-500" : ""}`}><Users className="w-3 h-3 mr-1" /> Grupo</Button>
                     </div>
                   </div>
-                  
+
                   {chatMode === "group" && (
                     <div className="flex flex-wrap gap-1 mt-2">
                       {userAgents.filter((a: any) => a.active).slice(0, 4).map((agent: any) => (
@@ -5649,7 +5673,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
                       ))}
                     </div>
                   )}
-                  
+
                   {/* Selected Agent Info - Read only from config */}
                   {selectedAgent && chatMode === "single" && (() => {
                     const agent = userAgents.find((a: any) => a.id === selectedAgent);
@@ -5669,7 +5693,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
                     );
                   })()}
                 </CardHeader>
-                
+
                 <CardContent className="flex-1 overflow-y-auto p-3 space-y-3">
                   {chatMessages.map((msg, i) => (
                     <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
@@ -5686,7 +5710,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
                   ))}
                   <div ref={chatEndRef} />
                 </CardContent>
-                
+
                 <CardFooter className="p-2 border-t gap-1">
                   <Input placeholder="Escribe un mensaje..." value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === "Enter" && handleSendMessage()} className="flex-1 h-9 text-sm" />
                   <Button size="icon" onClick={handleSendMessage} className="bg-emerald-500 hover:bg-emerald-600 h-9 w-9 shrink-0"><Send className="w-4 h-4" /></Button>
@@ -5697,7 +5721,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
           </ResizablePanelGroup>
         </div>
       </div>
-      
+
       {/* Agent History Modal */}
       <AnimatePresence>
         {showAgentHistory && selectedAgentHistory && (
@@ -5715,7 +5739,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => setShowAgentHistory(false)}><X className="w-4 h-4" /></Button>
               </div>
-              
+
               <Tabs defaultValue="acciones" className="flex-1 overflow-hidden">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="acciones">Registro de Acciones</TabsTrigger>
@@ -5734,19 +5758,18 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
                       { time: "15 Ene 11:45", action: "Predicción de riesgo actualizada", type: "prediction", status: "success" },
                     ].map((log, i) => (
                       <div key={i} className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                          log.type === 'email' ? 'bg-blue-500/20' :
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${log.type === 'email' ? 'bg-blue-500/20' :
                           log.type === 'call' ? 'bg-green-500/20' :
-                          log.type === 'analisis' ? 'bg-purple-500/20' :
-                          log.type === 'report' ? 'bg-orange-500/20' :
-                          log.type === 'alert' ? 'bg-yellow-500/20' : 'bg-emerald-500/20'
-                        }`}>
+                            log.type === 'analisis' ? 'bg-purple-500/20' :
+                              log.type === 'report' ? 'bg-orange-500/20' :
+                                log.type === 'alert' ? 'bg-yellow-500/20' : 'bg-emerald-500/20'
+                          }`}>
                           {log.type === 'email' ? <Mail className="w-4 h-4 text-blue-500" /> :
-                           log.type === 'call' ? <Phone className="w-4 h-4 text-green-500" /> :
-                           log.type === 'analisis' ? <BarChart3 className="w-4 h-4 text-purple-500" /> :
-                           log.type === 'report' ? <FileText className="w-4 h-4 text-orange-500" /> :
-                           log.type === 'alert' ? <AlertTriangle className="w-4 h-4 text-yellow-500" /> :
-                           <Check className="w-4 h-4 text-emerald-500" />}
+                            log.type === 'call' ? <Phone className="w-4 h-4 text-green-500" /> :
+                              log.type === 'analisis' ? <BarChart3 className="w-4 h-4 text-purple-500" /> :
+                                log.type === 'report' ? <FileText className="w-4 h-4 text-orange-500" /> :
+                                  log.type === 'alert' ? <AlertTriangle className="w-4 h-4 text-yellow-500" /> :
+                                    <Check className="w-4 h-4 text-emerald-500" />}
                         </div>
                         <div className="flex-1">
                           <p className="text-sm">{log.action}</p>
@@ -5781,7 +5804,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       {/* Client Detail Modal */}
       <AnimatePresence>
         {showClientDetail && selectedClientDetail && (
@@ -5799,7 +5822,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => setShowClientDetail(false)}><X className="w-4 h-4" /></Button>
               </div>
-              
+
               <Tabs defaultValue="interacciones" className="flex-1 overflow-hidden">
                 <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="interacciones">Interacciones</TabsTrigger>
@@ -5883,19 +5906,19 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       {/* Call Modal */}
       <AnimatePresence>
         {showCallModal && selectedClient && (
-          <CallModal 
-            client={selectedClient} 
-            agent={userAgents.find(a => a.id === selectedClient.agent)} 
-            onClose={() => setShowCallModal(false)} 
-            onLogCall={logCall} 
+          <CallModal
+            client={selectedClient}
+            agent={userAgents.find(a => a.id === selectedClient.agent)}
+            onClose={() => setShowCallModal(false)}
+            onLogCall={logCall}
           />
         )}
       </AnimatePresence>
-      
+
       {/* Email Modal */}
       <AnimatePresence>
         {showEmailModal && selectedClient && (
@@ -5913,7 +5936,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => setShowEmailModal(false)}><X className="w-4 h-4" /></Button>
               </div>
-              
+
               <div className="space-y-3">
                 <div>
                   <Label className="text-xs">Para</Label>
@@ -5921,16 +5944,16 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
                 </div>
                 <div>
                   <Label className="text-xs">Asunto</Label>
-                  <Input value={emailContent.subject} onChange={(e) => setEmailContent({...emailContent, subject: e.target.value})} placeholder="Asunto del email..." className="mt-1 h-9" />
+                  <Input value={emailContent.subject} onChange={(e) => setEmailContent({ ...emailContent, subject: e.target.value })} placeholder="Asunto del email..." className="mt-1 h-9" />
                 </div>
                 <div>
                   <Label className="text-xs">Mensaje</Label>
-                  <Textarea value={emailContent.body} onChange={(e) => setEmailContent({...emailContent, body: e.target.value})} placeholder="Escribe tu mensaje..." className="mt-1 h-32" />
+                  <Textarea value={emailContent.body} onChange={(e) => setEmailContent({ ...emailContent, body: e.target.value })} placeholder="Escribe tu mensaje..." className="mt-1 h-32" />
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" className="gap-1" onClick={handleAgentWriteEmail} disabled={agentWritingEmail}>
-                    <Bot className="w-3 h-3" /> 
+                    <Bot className="w-3 h-3" />
                     {agentWritingEmail ? "Escribiendo..." : "Agente escribe"}
                   </Button>
                   {agentWritingEmail && (
@@ -5941,7 +5964,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
                   )}
                 </div>
               </div>
-              
+
               <div className="flex gap-2 mt-4">
                 <Button variant="outline" className="flex-1" onClick={() => setShowEmailModal(false)}>Cancelar</Button>
                 <Button className="flex-1 bg-emerald-500 hover:bg-emerald-600 gap-1" onClick={sendEmail}>
@@ -5952,12 +5975,12 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       {/* Dynamic Cursor - Small Icon Near Pointer */}
-      <div 
+      <div
         className="fixed pointer-events-none z-[9999]"
-        style={{ 
-          left: mousePos.x + 12, 
+        style={{
+          left: mousePos.x + 12,
           top: mousePos.y + 12,
         }}
       >
@@ -6043,7 +6066,7 @@ function Footer({ setCurrentView }: { setCurrentView: (v: ViewType) => void }) {
 // Main App
 export default function Home() {
   const { currentView, setCurrentView, formData, setFormData } = useNavigation();
-  
+
   return (
     <div className="min-h-screen flex flex-col">
       {currentView !== "panel" && <Navbar currentView={currentView} setCurrentView={setCurrentView} />}
@@ -6076,6 +6099,13 @@ export default function Home() {
           {currentView === "legal" && (
             <motion.div key="legal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <LegalPage setCurrentView={setCurrentView} />
+            </motion.div>
+          )}
+          {currentView === "target" && (
+            <motion.div key="target" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <div className="pt-16">
+                <TargetDashboardDemo />
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

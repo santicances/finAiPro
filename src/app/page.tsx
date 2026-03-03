@@ -136,7 +136,7 @@ import {
 import { Bar, BarChart, XAxis, YAxis, PieChart as RechartsPie, Pie, Cell, Area, AreaChart, Line, LineChart as RechartsLineChart, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar as RechartsRadar } from "recharts";
 
 // Types
-type ViewType = "landing" | "equipo" | "legal" | "configuracion" | "panel" | "target";
+type ViewType = "landing" | "equipo" | "legal" | "configuracion" | "panel" | "target" | "login";
 
 import { SmeDashboardDemo } from "@/components/sme-dashboard";
 import { TargetDashboardDemo } from "@/components/target-dashboard";
@@ -328,7 +328,7 @@ function Navbar({ currentView, setCurrentView }: { currentView: ViewType; setCur
           </div>
 
           <div className="hidden md:flex items-center gap-4">
-            <Button variant="ghost">Iniciar Sesión</Button>
+            <Button variant="ghost" onClick={() => setCurrentView("login")}>Iniciar Sesión</Button>
             <Button
               className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
               onClick={() => setCurrentView("configuracion")}
@@ -365,7 +365,7 @@ function Navbar({ currentView, setCurrentView }: { currentView: ViewType; setCur
               <button onClick={() => { setCurrentView("equipo"); setIsOpen(false); }} className="block text-muted-foreground hover:text-foreground w-full text-left">Equipo</button>
               <button onClick={() => { setCurrentView("legal"); setIsOpen(false); }} className="block text-muted-foreground hover:text-foreground w-full text-left">Legal</button>
               <div className="flex gap-2 pt-2">
-                <Button variant="ghost" className="flex-1">Iniciar Sesión</Button>
+                <Button variant="ghost" className="flex-1" onClick={() => { setCurrentView("login"); setIsOpen(false); }}>Iniciar Sesión</Button>
                 <Button className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600" onClick={() => { setCurrentView("configuracion"); setIsOpen(false); }}>Demo Gratis</Button>
               </div>
             </div>
@@ -1283,12 +1283,25 @@ function SupportChat() {
 
   const handleSend = () => {
     if (!inputValue.trim()) return;
-    setMessages([...messages, { role: "user", content: inputValue }]);
+    const currentMessages = [...messages, { role: "user", content: inputValue }];
+    setMessages(currentMessages);
     setInputValue("");
-    setTimeout(() => {
-      const responses = ["¡Excelente pregunta! Nuestros agentes digitales pueden automatizar hasta el 90% de las tareas repetitivas.", "Entiendo. Nuestro sistema de aprendizaje observacional replica el comportamiento de tus mejores empleados.", "Por supuesto, puedo ayudarte a agendar una demostración con nuestro equipo."];
-      setMessages(prev => [...prev, { role: "assistant", content: responses[Math.floor(Math.random() * responses.length)] }]);
-    }, 1000);
+
+    fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: currentMessages.map(m => ({ role: m.role, content: m.content })),
+        system_prompt: "Eres el asistente de soporte experto de FinAI Pro. Responde preguntas breves (1-3 frases) sobre IA, datos, software para empresas financieras y agencias locales. Eres muy amable y profesional."
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        setMessages(prev => [...prev, { role: "assistant", content: data.reply || "Lo siento, hubo un error de conexión." }]);
+      })
+      .catch(() => {
+        setMessages(prev => [...prev, { role: "assistant", content: "Lo siento, ha ocurrido un error al contactarme." }]);
+      });
   };
 
   return (
@@ -2964,16 +2977,28 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
 
   const handleSendMessage = () => {
     if (!newMessage.trim()) return;
-    setChatMessages(prev => [...prev, { role: "user", content: newMessage }]);
+    const currentMessages = [...chatMessages, { role: "user", content: newMessage, agent: "" }];
+    setChatMessages(currentMessages as any);
     setNewMessage("");
-    setTimeout(() => {
-      const agent = selectedAgent ? userAgents.find(a => a.id === selectedAgent)?.name : "Aria-7";
-      setChatMessages(prev => [...prev, {
-        role: "assistant",
-        content: `Como ${agent}, he analizado tu solicitud. Basándome en los datos disponibles, te recomiendo revisar las métricas. ¿Necesitas más detalles?`,
-        agent: agent
-      }]);
-    }, 1000);
+
+    const agent = selectedAgent ? userAgents.find(a => a.id === selectedAgent)?.name : "Orquestador Principal";
+    const systemPrompt = `Actúas como ${agent} en el panel de FinAI Pro analizando datos de la empresa y conversando de forma técnica y directa.`;
+
+    fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: currentMessages.map(m => ({ role: m.role, content: m.content })),
+        system_prompt: systemPrompt
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        setChatMessages(prev => [...prev, { role: "assistant", content: data.reply || "No puedo conectar con la base de datos de IA.", agent }] as any);
+      })
+      .catch(() => {
+        setChatMessages(prev => [...prev, { role: "assistant", content: "Error de IA remota.", agent }] as any);
+      });
   };
 
   // Model handlers
@@ -6022,44 +6047,94 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
 // Footer
 function Footer({ setCurrentView }: { setCurrentView: (v: ViewType) => void }) {
   return (
-    <footer className="bg-card border-t border-border py-12 px-4 mt-auto">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
-          <div>
-            <button onClick={() => setCurrentView("landing")} className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center"><Brain className="w-6 h-6 text-white" /></div>
-              <span className="text-xl font-bold">FinAI Pro</span>
-            </button>
-            <p className="text-sm text-muted-foreground">Transformando empresas financieras con IA desde 2020.</p>
+    <footer className="bg-slate-900 border-t border-slate-800 py-12 px-4 text-slate-400">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="col-span-1 md:col-span-2 space-y-4">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
+              <Brain className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold text-white">FinAI Pro</span>
           </div>
-          <div>
-            <h4 className="font-semibold mb-4">Servicios</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#servicios" className="hover:text-foreground">Data Analytics</a></li>
-              <li><a href="#inversores" className="hover:text-foreground">Portfolio Inteligente</a></li>
-              <li><a href="#servicios" className="hover:text-foreground">Agentes de IA</a></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-semibold mb-4">Empresa</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><button onClick={() => setCurrentView("equipo")} className="hover:text-foreground">Equipo</button></li>
-              <li><button onClick={() => setCurrentView("configuracion")} className="hover:text-foreground">Demo Gratis</button></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-semibold mb-4">Legal</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><button onClick={() => setCurrentView("legal")} className="hover:text-foreground">Aviso Legal</button></li>
-              <li><button onClick={() => setCurrentView("legal")} className="hover:text-foreground">Privacidad</button></li>
-            </ul>
+          <p className="max-w-md"> Transformando el sector financiero español a través de automatización inteligente y agentes de IA observacionales de última generación. </p>
+          <div className="flex gap-4 pt-4">
+            <a href="#" className="hover:text-emerald-400 transition-colors"><Twitter className="w-5 h-5" /></a>
+            <a href="#" className="hover:text-emerald-400 transition-colors"><Linkedin className="w-5 h-5" /></a>
+            <a href="#" className="hover:text-emerald-400 transition-colors"><Globe className="w-5 h-5" /></a>
           </div>
         </div>
-        <div className="pt-8 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-muted-foreground">© 2024 FinAI Pro. Todos los derechos reservados.</p>
+        <div>
+          <h4 className="font-semibold text-white mb-4">Producto</h4>
+          <ul className="space-y-2">
+            <li><button onClick={() => setCurrentView("configuracion")} className="hover:text-emerald-400 transition-colors">Solicitar Demo</button></li>
+            <li><button onClick={() => setCurrentView("login")} className="hover:text-emerald-400 transition-colors">Iniciar sesión (Guest)</button></li>
+            <li><a href="#precios" className="hover:text-emerald-400 transition-colors">Precios</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 className="font-semibold text-white mb-4">Compañía</h4>
+          <ul className="space-y-2">
+            <li><button onClick={() => setCurrentView("equipo")} className="hover:text-emerald-400 transition-colors">Equipo de Expertos</button></li>
+            <li><button onClick={() => setCurrentView("legal")} className="hover:text-emerald-400 transition-colors">Aviso Legal y Privacidad</button></li>
+          </ul>
         </div>
       </div>
+      <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-slate-800 text-sm text-center">
+        <p>© {new Date().getFullYear()} FinAI Pro Solutions, S.L. Todos los derechos reservados. CIF: B-87654321</p>
+        <p className="mt-2 text-slate-500">Madrid, España</p>
+      </div>
     </footer>
+  );
+}
+
+// Login Page Component
+function LoginPage({ setCurrentView }: { setCurrentView: (v: ViewType) => void }) {
+  return (
+    <div className="min-h-screen pt-32 pb-20 flex flex-col justify-center items-center bg-muted/30">
+      <Card className="w-full max-w-md shadow-2xl border-none">
+        <CardHeader className="text-center space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20">
+            <Lock className="w-8 h-8 text-white" />
+          </div>
+          <CardTitle className="text-3xl font-bold tracking-tight">Acceso a Panel</CardTitle>
+          <CardDescription>Inicia sesión o entra como visitante</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Email corporativo</label>
+              <input type="email" placeholder="admin@empresa.com" className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:ring-2 focus:ring-emerald-500 outline-none transition-all" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Contraseña</label>
+              <input type="password" placeholder="••••••••" className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:ring-2 focus:ring-emerald-500 outline-none transition-all" />
+            </div>
+            <Button
+              className="w-full py-6 text-base shadow-lg shadow-emerald-500/20 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 transition-all font-semibold"
+              onClick={() => setCurrentView("panel")}
+            >
+              Iniciar Sesión Seguro
+            </Button>
+          </div>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-muted"></span></div>
+            <div className="relative flex justify-center text-xs uppercase"><span className="bg-muted px-2 text-muted-foreground rounded-full">Accesos directos</span></div>
+          </div>
+
+          <Button
+            variant="outline"
+            className="w-full py-6 text-base hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-colors"
+            onClick={() => setCurrentView("panel")}
+          >
+            <User className="w-5 h-5 mr-2" /> Entrar como Visitante
+          </Button>
+          <p className="text-xs text-center text-muted-foreground pt-2">
+            El modo visitante no asocia datos a la base de datos ni requiere registro.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
@@ -6106,6 +6181,11 @@ export default function Home() {
               <div className="pt-16">
                 <TargetDashboardDemo />
               </div>
+            </motion.div>
+          )}
+          {currentView === "login" && (
+            <motion.div key="login" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <LoginPage setCurrentView={setCurrentView} />
             </motion.div>
           )}
         </AnimatePresence>

@@ -140,6 +140,7 @@ type ViewType = "landing" | "equipo" | "legal" | "configuracion" | "panel" | "ta
 
 import { SmeDashboardDemo } from "@/components/sme-dashboard";
 import { TargetDashboardDemo } from "@/components/target-dashboard";
+import { AdGeneratorModal } from "@/components/ad-generator-modal";
 
 // Wizard Steps - Extended
 const WIZARD_STEPS = [
@@ -2659,10 +2660,91 @@ function CallModal({ client, agent, onClose, onLogCall }: { client: any; agent: 
   );
 }
 
+// SME Agent Types and Tasks
+const SME_AGENT_TYPES = [
+  {
+    id: "secretaria",
+    name: "Secretaria Virtual",
+    icon: Phone,
+    color: "from-pink-500 to-rose-500",
+    badge: "bg-pink-100 text-pink-700",
+    description: "Gestión de agenda, llamadas y atención básica.",
+    tasks: [
+      "Agendar citas en calendario", "Responder correos de clientes", "Realizar llamadas de recordatorio",
+      "Confirmar asistencias por WhatsApp", "Gestionar cancelaciones", "Filtrar llamadas entrantes",
+      "Organizar tareas del día", "Enviar avisos de cobro", "Atender dudas básicas por chat",
+      "Solicitar valoraciones en Google", "Actualizar base de datos de clientes", "Coordinar envíos de pedidos",
+      "Redactar actas de reuniones", "Gestionar reclamaciones iniciales", "Enviar tarjetas de felicitación"
+    ]
+  },
+  {
+    id: "social",
+    name: "Gestor de Redes",
+    icon: Globe,
+    color: "from-violet-500 to-purple-500",
+    badge: "bg-violet-100 text-violet-700",
+    description: "Creación de contenido y respuesta en redes sociales.",
+    tasks: [
+      "Publicar post diario en Instagram", "Responder comentarios en Facebook", "Monitorizar menciones de la marca",
+      "Programar contenido en LinkedIn", "Actualizar ficha de Google Business", "Responder reseñas de clientes",
+      "Crear historias con promociones", "Analizar hashtags de competencia", "Redactar copies atractivos",
+      "Buscar tendencias locales", "Gestionar mensajes directos (DMs)", "Crear sorteos y promociones",
+      "Generar informes de alcance", "Diseñar banners sencillos", "Colaborar con influencers locales"
+    ]
+  },
+  {
+    id: "contable",
+    name: "Contable Digital",
+    icon: FileSpreadsheet,
+    color: "from-amber-500 to-orange-500",
+    badge: "bg-amber-100 text-amber-700",
+    description: "Facturación, tickets y control de gastos.",
+    tasks: [
+      "Generar facturas de venta", "Registrar facturas de proveedores", "Conciliación bancaria diaria",
+      "Gestionar gastos y tickets", "Generar borradores de impuestos", "Avisar vencimientos de pagos",
+      "Reclamar facturas impagadas", "Analizar flujo de caja", "Generar resúmenes de beneficio",
+      "Categorizar gastos automáticamente", "Digitalizar documentos", "Sincronizar transacciones",
+      "Preparar datos para gestoría", "Seguimiento de presupuestos", "Controlar inventario básico"
+    ]
+  },
+  {
+    id: "comercial",
+    name: "Captador de Clientes",
+    icon: Target,
+    color: "from-blue-500 to-indigo-500",
+    badge: "bg-blue-100 text-blue-700",
+    description: "Búsqueda de leads y llamadas de venta.",
+    tasks: [
+      "Búsqueda de leads", "Realizar llamadas de venta", "Enviar propuestas comerciales",
+      "Seguimiento de leads fríos", "Calificar prospectos nuevos", "Actualizar pipeline CRM",
+      "Investigar mercados nuevos", "Contactar clientes antiguos", "Ofrecer cupones fidelidad",
+      "Organizar visitas comerciales", "Gestionar base de datos ventas", "Analizar ventas perdidas",
+      "Redactar guiones de venta", "Enviar presentaciones", "Detección de venta cruzada"
+    ]
+  },
+  {
+    id: "marketing",
+    name: "Asistente de Marketing",
+    icon: Megaphone,
+    color: "from-cyan-500 to-blue-500",
+    badge: "bg-cyan-100 text-cyan-700",
+    description: "Publicidad local y diseño de campañas.",
+    tasks: [
+      "Crear landing pages", "Redactar newsletter semanal", "Gestionar Facebook Ads",
+      "Configurar Google Maps Ads", "Analizar tráfico web", "Crear cupones descuento",
+      "Redactar artículos blog", "Optimizar SEO local", "Enviar ofertas por SMS",
+      "Diseñar flyers", "Analizar precios competencia", "Organizar eventos locales",
+      "Gestionar referidos", "Crear videos cortos", "Realizar encuestas satisfacción"
+    ]
+  }
+];
+
 // User Dashboard Panel
 function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentView: (v: ViewType) => void; formData: FormData; setFormData: (d: FormData) => void }) {
   const [activeTab, setActiveTab] = useState("agentes");
   const [panelMode, setPanelMode] = useState<"enterprise" | "sme">("enterprise");
+  const [isCalling, setIsCalling] = useState(false);
+  const [callingData, setCallingData] = useState<{ name: string; phone: string; avatar?: string } | null>(null);
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [chatMode, setChatMode] = useState<"single" | "group">("single");
   const [chatMessages, setChatMessages] = useState<{ role: string; content: string; agent?: string }[]>([
@@ -2670,7 +2752,74 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
   ]);
   const [newMessage, setNewMessage] = useState("");
   const [showAddAgent, setShowAddAgent] = useState(false);
+  const [showSmeAddAgent, setShowSmeAddAgent] = useState(false);
+  const [showAdGenerator, setShowAdGenerator] = useState(false);
+  const [newSmeAgent, setNewSmeAgent] = useState({ name: "", type: "secretaria", tasks: [] as string[] });
+  const [smeAgents, setSmeAgents] = useState([
+    {
+      name: "Sofía — Secretaria de Citas",
+      role: "Secretaria Virtual",
+      desc: "Gestiona tu agenda, hace y recibe llamadas, confirma citas con tus clientes y envía recordatorios automáticos por WhatsApp.",
+      icon: "📞",
+      color: "from-pink-500 to-rose-500",
+      badge: "bg-pink-100 text-pink-700",
+      status: "activo",
+      stats: [
+        { label: "Citas gestionadas", value: "47" },
+        { label: "Llamadas realizadas", value: "23" },
+        { label: "Tasa confirmación", value: "91%" },
+      ],
+      capabilities: ["Llamadas salientes automáticas", "Recordatorios WhatsApp", "Calendario integrado", "Gestión de cancelaciones"],
+    },
+    {
+      name: "Marco — Captador de Leads",
+      role: "Agente de Ventas",
+      desc: "Responde a los visitantes de tu web en tiempo real, cualifica prospectos y agenda reuniones con los clientes potenciales.",
+      icon: "🎯",
+      color: "from-blue-500 to-indigo-500",
+      badge: "bg-blue-100 text-blue-700",
+      status: "activo",
+      stats: [
+        { label: "Leads captados", value: "31" },
+        { label: "Conversiones", value: "12" },
+        { label: "Tasa respuesta", value: "< 30s" },
+      ],
+      capabilities: ["Chat web 24/7", "Calificación automática", "Agenda reuniones", "CRM sync"],
+    },
+    {
+      name: "Elena — Community Manager",
+      role: "Redes Sociales",
+      desc: "Crea, programa y publica contenido en Instagram, LinkedIn y Google Business. Responde comentarios y mensajes directos.",
+      icon: "📱",
+      color: "from-violet-500 to-purple-500",
+      badge: "bg-violet-100 text-violet-700",
+      status: "pausado",
+      stats: [
+        { label: "Posts publicados", value: "18" },
+        { label: "Alcance medio", value: "1.4K" },
+        { label: "Interacciones", value: "426" },
+      ],
+      capabilities: ["Publicación automática", "Responde comentarios", "Google Business", "Informes semanales"],
+    },
+    {
+      name: "Carlos — Asistente Administrativo",
+      role: "Gestión Interna",
+      desc: "Redacta presupuestos, facturas y propuestas comerciales. Resume reuniones y gestiona el correo de tu empresa.",
+      icon: "📂",
+      color: "from-amber-500 to-orange-500",
+      badge: "bg-amber-100 text-amber-700",
+      status: "activo",
+      stats: [
+        { label: "Documentos", value: "34" },
+        { label: "Emails gestionados", value: "89" },
+        { label: "Tiempo ahorrado", value: "6h/sem" },
+      ],
+      capabilities: ["Presupuestos automáticos", "Resumen de reuniones", "Gestión de emails", "Propuestas PDF"],
+    },
+  ]);
   const [editingAgent, setEditingAgent] = useState<string | null>(null);
+  const [editingSmeAgentIndex, setEditingSmeAgentIndex] = useState<number | null>(null);
+
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [chatExpanded, setChatExpanded] = useState(false);
   const [chatConfig, setChatConfig] = useState({ temperature: 0.7, model: "Claude Sonnet 4.6" });
@@ -2899,7 +3048,25 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
   const [clientFilter, setClientFilter] = useState({ phase: "todos", billing: "todos" });
   const [newClient, setNewClient] = useState({ name: "", email: "", phone: "", agent: "", phase: "nuevo", billing: 0 });
   const [emailContent, setEmailContent] = useState({ subject: "", body: "" });
+  const [emailTo, setEmailTo] = useState("");
   const [agentWritingEmail, setAgentWritingEmail] = useState(false);
+
+  // SME enhanced state
+  const [smeProspects, setSmeProspects] = useState([
+    { id: 1, name: "Javier", phone: "+34 607 08 44 00", email: "javier@ejemplo.es", status: "pendiente", notes: "" },
+    { id: 2, name: "Paulo", phone: "+34 630 25 40 93", email: "paulo@empresa.com", status: "pendiente", notes: "" },
+    { id: 3, name: "Pedro", phone: "+34 696 26 31 92", email: "pedro@servicios.net", status: "pendiente", notes: "" },
+    { id: 4, name: "Ernesto", phone: "+34 607 18 33 61", email: "ernesto@pyme.es", status: "pendiente", notes: "" },
+  ]);
+
+  const [smeAppointments, setSmeAppointments] = useState([
+    { id: 1, date: "2026-03-04", time: "09:00", client: "Servicios Martínez", type: "Revisión Web", status: "confirmed" },
+    { id: 2, date: "2026-03-04", time: "11:30", client: "Clínica Dental Sonrisas", type: "Estrategia SEM", status: "pending" },
+    { id: 3, date: "2026-03-04", time: "14:00", client: "Restaurante El Puerto", type: "Sesión Fotos", status: "confirmed" },
+    { id: 4, date: "2026-03-04", time: "16:45", client: "Abogados Asociados", type: "Plan de Leads", status: "confirmed" },
+  ]);
+  const [showSmeAppointmentModal, setShowSmeAppointmentModal] = useState(false);
+  const [newSmeAppointment, setNewSmeAppointment] = useState({ client: "", date: "2026-03-04", time: "10:00", type: "Consulta" });
 
   // User agents state with full configuration
   const [userAgents, setUserAgents] = useState([
@@ -3056,6 +3223,37 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
     setUserAgents(prev => prev.filter(a => a.id !== agentId));
   };
 
+  const addSmeAgent = () => {
+    const type = SME_AGENT_TYPES.find(t => t.id === newSmeAgent.type);
+    if (!type) return;
+
+    const agentData = {
+      name: newSmeAgent.name || `${type.name} #${smeAgents.length + 1}`,
+      role: type.name,
+      desc: type.description,
+      icon: editingSmeAgentIndex !== null ? smeAgents[editingSmeAgentIndex].icon : "🤖",
+      color: type.color,
+      badge: type.badge,
+      status: "activo",
+      stats: editingSmeAgentIndex !== null ? smeAgents[editingSmeAgentIndex].stats : [
+        { label: "Tareas hoy", value: "0" },
+        { label: "Conversaciones", value: "0" },
+        { label: "Eficiencia", value: "100%" },
+      ],
+      capabilities: newSmeAgent.tasks.length > 0 ? newSmeAgent.tasks : type.tasks.slice(0, 4),
+    };
+
+    if (editingSmeAgentIndex !== null) {
+      setSmeAgents(prev => prev.map((a, i) => i === editingSmeAgentIndex ? { ...a, ...agentData } : a));
+      setEditingSmeAgentIndex(null);
+    } else {
+      setSmeAgents(prev => [...prev, agentData as any]);
+    }
+
+    setShowSmeAddAgent(false);
+    setNewSmeAgent({ name: "", type: "secretaria", tasks: [] });
+  };
+
   const deleteDataSource = (sourceId: number) => {
     setDataSources(prev => prev.filter(s => s.id !== sourceId));
   };
@@ -3082,8 +3280,13 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
     setChatMessages(currentMessages as any);
     setNewMessage("");
 
-    const agent = selectedAgent ? userAgents.find(a => a.id === selectedAgent)?.name : "Orquestador Principal";
-    const systemPrompt = `Actúas como ${agent} en el panel de FinAI Pro analizando datos de la empresa y conversando de forma técnica y directa.`;
+    const allAgents = [
+      ...userAgents,
+      ...smeAgents.map((a, i) => ({ id: `agent-sme-${i + 1}`, name: a.name, role: a.role }))
+    ];
+    const agentObj = allAgents.find(a => a.id === selectedAgent);
+    const agent = agentObj ? agentObj.name : "Orquestador Principal";
+    const systemPrompt = `Actúas como ${agent} en el panel de FinAI Pro. Si eres Sofía, eres una secretaria amable que gestiona citas. Si eres Marco, eres un vendedor agresivo pero profesional. Si eres Elena, eres creativa y experta en redes. Si eres Carlos, eres eficiente y organizado. Si eres nuevo, básate en tu rol: ${agentObj?.role || 'Asistente general'}.`;
 
     fetch('/api/chat', {
       method: 'POST',
@@ -3187,9 +3390,13 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
   const sendEmail = () => {
     if (selectedClient) {
       const newInteraction = { type: "email", date: "Ahora", summary: emailContent.subject || "Email enviado" };
-      setClients(prev => prev.map(c => c.id === selectedClient.id ? { ...c, interactions: [newInteraction, ...c.interactions] } : c));
+      setClients(prev => prev.map(c => c.id === selectedClient.id ? { ...c, interactions: [newInteraction, ...(c.interactions || [])] } : c));
+    } else if (emailTo) {
+      setSmeProspects(prev => prev.map(p => p.email === emailTo || p.name === emailTo ? { ...p, status: "contactado" } : p));
     }
     setShowEmailModal(false);
+    setEmailContent({ subject: "", body: "" });
+    setEmailTo("");
   };
 
   const logCall = (notes: string) => {
@@ -3223,7 +3430,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
                 onClick={() => setCurrentView("landing")}
                 className="flex items-center gap-2"
               >
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${panelMode === 'sme' ? 'from-blue-600 to-indigo-700 shadow-blue-500/20 shadow-lg' : 'from-emerald-500 to-teal-600 shadow-emerald-500/20 shadow-lg'} flex items-center justify-center transition-all duration-500`}>
                   <Brain className="w-6 h-6 text-white" />
                 </div>
                 <div className="hidden sm:block">
@@ -3236,14 +3443,14 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
             </div>
 
             {/* Cursor Type Indicator */}
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-full border">
+            <div className={`hidden md:flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-full border transition-all ${panelMode === 'sme' ? 'border-blue-100' : 'border-emerald-100'}`}>
               <div className={`w-3 h-3 rounded-full ${cursorType === 'default' ? 'bg-gray-500' :
-                cursorType === 'agent' ? 'bg-emerald-500' :
+                cursorType === 'agent' ? (panelMode === 'sme' ? 'bg-blue-500' : 'bg-emerald-500') :
                   cursorType === 'edit' ? 'bg-blue-500' :
-                    cursorType === 'data' ? 'bg-purple-500' :
+                    cursorType === 'data' ? (panelMode === 'sme' ? 'bg-indigo-500' : 'bg-purple-500') :
                       'bg-orange-500'
                 }`} />
-              <span className="text-xs text-muted-foreground capitalize">{cursorType}</span>
+              <span className={`text-xs capitalize font-medium ${panelMode === 'sme' ? 'text-blue-600' : 'text-emerald-600'}`}>{cursorType}</span>
             </div>
 
             <div className="flex items-center gap-3">
@@ -3286,15 +3493,17 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
         <aside className={`${sidebarOpen ? 'w-64' : 'w-0'} lg:w-64 bg-background border-r border-border transition-all duration-300 overflow-hidden shrink-0`}>
           <div className="p-4 space-y-2">
             {[
-              { id: "agentes", icon: Bot, label: "Agentes", cursor: "agent", modes: ["enterprise", "sme"] },
+              { id: "agentes", icon: Bot, label: "Agentes IA", cursor: "agent", modes: ["enterprise", "sme"] },
+              { id: "analiticas", icon: BarChart3, label: panelMode === "sme" ? "Analítica de Tráfico" : "Analíticas", cursor: "data", modes: ["enterprise", "sme"] },
+              { id: "leads", icon: Users, label: "Leads / Prospectos", cursor: "default", modes: ["sme"] },
+              { id: "citas", icon: Calendar, label: "Gestión de Citas", cursor: "default", modes: ["sme"] },
               { id: "modelos", icon: Brain, label: "Modelos", cursor: "agent", modes: ["enterprise"] },
               { id: "portfolio", icon: Wallet, label: "Mi Portfolio", cursor: "default", modes: ["enterprise"] },
-              { id: "clientes", icon: Users, label: "Clientes", cursor: "default", modes: ["enterprise", "sme"] },
+              { id: "clientes", icon: Users, label: "Clientes", cursor: "default", modes: ["enterprise"] },
               { id: "fuentes", icon: Database, label: "Fuentes de Datos", cursor: "data", modes: ["enterprise"] },
               { id: "predicciones", icon: Lightbulb, label: "Predicciones", cursor: "default", modes: ["enterprise"] },
               { id: "tareas", icon: Zap, label: "Tareas Automáticas", cursor: "action", modes: ["enterprise"] },
               { id: "competencia", icon: Eye, label: "Competencia", cursor: "default", modes: ["enterprise"] },
-              { id: "analiticas", icon: BarChart3, label: panelMode === "sme" ? "Tráfico Web" : "Analíticas", cursor: "data", modes: ["enterprise", "sme"] },
             ].filter(tab => tab.modes.includes(panelMode)).map(tab => (
               <button
                 key={tab.id}
@@ -3312,26 +3521,103 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
             ))}
           </div>
 
-          {/* Quick Stats */}
+          {/* SME Quick Call Button */}
+          {panelMode === "sme" && (
+            <div className="px-4 mt-4">
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2 border-blue-200 text-blue-600 bg-blue-50/50"
+                onClick={() => {
+                  setCallingData({ name: "Cualquier Prospecto", phone: "Llamada Saliente..." });
+                  setIsCalling(true);
+                }}
+              >
+                <PhoneCall className="w-4 h-4" />
+                <span>Hacer llamada rápida</span>
+              </Button>
+            </div>
+          )}
+
+          {/* Quick Stats - Diferente para PYME vs Enterprise */}
           <div className="p-4 border-t border-border">
             <h4 className="text-xs font-medium text-muted-foreground mb-3">RESUMEN</h4>
             <div className="space-y-3">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Agentes Activos</span>
-                <Badge className="bg-emerald-500">{userAgents.filter(a => a.active).length}</Badge>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Clientes</span>
-                <Badge variant="outline">{clients.length}</Badge>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Tareas Hoy</span>
-                <span className="font-medium">{userAgents.reduce((sum: number, a) => sum + a.stats.tasks, 0)}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">ROI Estimado</span>
-                <span className="font-medium text-emerald-500">+34%</span>
-              </div>
+              {panelMode === "sme" ? (
+                <>
+                  {/* Métricas PYME - Enfocadas en negocio real */}
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground flex items-center gap-1.5">
+                      <DollarSign className="w-3.5 h-3.5 text-emerald-500" />
+                      Facturación Mes
+                    </span>
+                    <span className="font-semibold text-emerald-600">€28.500</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground flex items-center gap-1.5">
+                      <UserPlus className="w-3.5 h-3.5 text-blue-500" />
+                      Nuevos Clientes
+                    </span>
+                    <Badge className="bg-blue-500 text-white">+12</Badge>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-purple-500" />
+                      Citas Hoy
+                    </span>
+                    <span className="font-medium">{smeAppointments.filter(a => a.date === "2026-03-04").length}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-teal-500" />
+                      Llamadas Gest.
+                    </span>
+                    <span className="font-medium">156</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-amber-500" />
+                      Horas Ahorradas
+                    </span>
+                    <span className="font-medium text-amber-600">47h</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground flex items-center gap-1.5">
+                      <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+                      Crecimiento
+                    </span>
+                    <span className="font-medium text-emerald-500">+17.8%</span>
+                  </div>
+                  {/* Mini progress bar */}
+                  <div className="pt-2 border-t border-border/50">
+                    <div className="flex items-center justify-between text-xs mb-1.5">
+                      <span className="text-muted-foreground">Objetivo Mensual</span>
+                      <span className="font-medium">78%</span>
+                    </div>
+                    <Progress value={78} className="h-1.5" />
+                    <p className="text-[10px] text-muted-foreground mt-1">€22.2K de €28.5K</p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Métricas Enterprise */}
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Agentes Activos</span>
+                    <Badge className="bg-emerald-500">{userAgents.filter(a => a.active).length}</Badge>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Clientes</span>
+                    <Badge variant="outline">{clients.length}</Badge>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Tareas Hoy</span>
+                    <span className="font-medium">{userAgents.reduce((sum: number, a) => sum + a.stats.tasks, 0)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">ROI Estimado</span>
+                    <span className="font-medium text-emerald-500">+34%</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </aside>
@@ -3342,8 +3628,184 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
             {/* Content Area */}
             <ResizablePanel defaultSize={70} minSize={40} className="overflow-hidden">
               <div className="h-full overflow-y-auto p-6">
-                {/* Tab: Agentes */}
-                {activeTab === "agentes" && (
+                {/* Tab: Agentes - PYME MODE */}
+                {activeTab === "agentes" && panelMode === "sme" && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-xl font-bold">Agentes para tu Negocio</h2>
+                        <p className="text-xs text-muted-foreground">Asistentes IA especializados en PYMEs y autónomos</p>
+                      </div>
+                      <Button size="sm" className="gap-1 bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/20" onClick={() => { setEditingSmeAgentIndex(null); setNewSmeAgent({ name: "", type: "secretaria", tasks: [] }); setShowSmeAddAgent(true); }}><Plus className="w-4 h-4" /> Nuevo Agente</Button>
+                    </div>
+
+                    {/* Add SME Agent Modal */}
+                    <AnimatePresence>
+                      {showSmeAddAgent && (
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+                          <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-background rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border-2 border-blue-500/20">
+                            <div className="flex items-center justify-between mb-6">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center text-white">
+                                  <Bot className="w-6 h-6" />
+                                </div>
+                                <div>
+                                  <h3 className="text-lg font-bold text-blue-600">{editingSmeAgentIndex !== null ? "Editar Agente Pyme" : "Nuevo Agente para Pyme"}</h3>
+                                  <p className="text-xs text-muted-foreground">{editingSmeAgentIndex !== null ? "Modifica las funciones de tu asistente" : "Versión simplificada para tu negocio"}</p>
+                                </div>
+                              </div>
+                              <Button variant="ghost" size="sm" onClick={() => setShowSmeAddAgent(false)}><X className="w-4 h-4" /></Button>
+                            </div>
+
+                            <div className="space-y-6">
+                              <div className="grid sm:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label className="text-sm font-semibold">Nombre del Agente</Label>
+                                  <Input
+                                    value={newSmeAgent.name}
+                                    onChange={(e) => setNewSmeAgent({ ...newSmeAgent, name: e.target.value })}
+                                    placeholder="Ej: Asistente Ventas"
+                                    className="h-10 border-blue-100"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="text-sm font-semibold">Tipo de Especialidad</Label>
+                                  <Select value={newSmeAgent.type} onValueChange={(v) => setNewSmeAgent({ ...newSmeAgent, type: v, tasks: [] })}>
+                                    <SelectTrigger className="h-10 border-blue-100"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                      {SME_AGENT_TYPES.map(t => {
+                                        const TypeIcon = t.icon;
+                                        return (
+                                          <SelectItem key={t.id} value={t.id}>
+                                            <div className="flex items-center gap-2">
+                                              <TypeIcon className="w-4 h-4" />
+                                              <span>{t.name}</span>
+                                            </div>
+                                          </SelectItem>
+                                        );
+                                      })}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <Label className="text-sm font-semibold">Tareas concretas (15 disponibles)</Label>
+                                  <span className="text-[10px] text-blue-500 font-bold uppercase tracking-wider">Cero configuración técnica</span>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-blue-50/30 p-4 rounded-xl border border-blue-100">
+                                  {(() => {
+                                    const type = SME_AGENT_TYPES.find(t => t.id === newSmeAgent.type);
+                                    return type?.tasks.map(task => (
+                                      <div key={task} className="flex items-center space-x-2">
+                                        <Checkbox
+                                          id={task}
+                                          checked={newSmeAgent.tasks.includes(task)}
+                                          onCheckedChange={(checked) => {
+                                            const tasks = checked
+                                              ? [...newSmeAgent.tasks, task]
+                                              : newSmeAgent.tasks.filter(t => t !== task);
+                                            setNewSmeAgent({ ...newSmeAgent, tasks });
+                                          }}
+                                        />
+                                        <label htmlFor={task} className="text-xs cursor-pointer select-none">{task}</label>
+                                      </div>
+                                    ));
+                                  })()}
+                                </div>
+                                <p className="text-[10px] text-muted-foreground text-center">Selecciona las tareas que quieres que este agente aprenda a realizar.</p>
+                              </div>
+
+                              <div className="flex gap-3">
+                                <Button variant="outline" className="flex-1 h-11" onClick={() => setShowSmeAddAgent(false)}>Cancelar</Button>
+                                <Button className="flex-1 h-11 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/20" onClick={addSmeAgent}>
+                                  {editingSmeAgentIndex !== null ? "Guardar Cambios" : "Activar Agente IA"}
+                                </Button>
+                              </div>
+                            </div>
+                          </motion.div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {smeAgents.map((agent, index) => (
+                      <Card key={`${agent.name}-${index}`} className="hover:shadow-md transition-all">
+                        <CardContent className="p-5">
+                          <div className="flex items-start gap-4">
+                            <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${agent.color} flex items-center justify-center text-2xl shrink-0 shadow-lg`}>
+                              {agent.icon}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-2 mb-1">
+                                <div>
+                                  <h3 className="font-bold text-base">{agent.name}</h3>
+                                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${agent.badge}`}>{agent.role}</span>
+                                </div>
+                                <Badge variant={agent.status === "activo" ? "default" : "secondary"} className={agent.status === "activo" ? "bg-emerald-500 text-white shrink-0" : "shrink-0"}>
+                                  {agent.status === "activo" ? "● Activo" : "⏸ Pausado"}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground mt-2 mb-3">{agent.desc}</p>
+
+                              {/* Stats row */}
+                              <div className="grid grid-cols-3 gap-2 mb-3">
+                                {agent.stats.map((s) => (
+                                  <div key={s.label} className="bg-muted/40 rounded-lg p-2 text-center">
+                                    <div className="text-base font-bold">{s.value}</div>
+                                    <div className="text-[10px] text-muted-foreground">{s.label}</div>
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* Capabilities */}
+                              <div className="flex flex-wrap gap-1.5">
+                                {agent.capabilities.map((cap) => (
+                                  <span key={cap} className="text-[10px] bg-muted px-2 py-0.5 rounded-full text-muted-foreground">{cap}</span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 mt-4 border-t pt-3">
+                            <Button size="sm" className="gap-1 bg-blue-600 hover:bg-blue-700 text-xs shadow-sm" onClick={() => {
+                              setSelectedAgent(`agent-sme-${index + 1}`);
+                              if (chatFloating) setChatWidth(450);
+                              else { /* Maybe some animation here */ }
+                            }}>
+                              <MessageCircle className="w-3 h-3" /> Chatear
+                            </Button>
+                            {agent.role === "Secretaria Virtual" && (
+                              <Button size="sm" variant="outline" className="text-xs gap-1 border-blue-200 text-blue-600 hover:bg-blue-50" onClick={() => {
+                                setCallingData({ name: "Cualquier Prospecto", phone: "Outbound AI Call..." });
+                                setIsCalling(true);
+                              }}>
+                                <PhoneCall className="w-3 h-3" /> Forzar Llamada
+                              </Button>
+                            )}
+                            {agent.role === "Redes Sociales" && (
+                              <Button size="sm" variant="outline" className="text-xs gap-1 border-violet-200 text-violet-600 hover:bg-violet-50" onClick={() => setShowAdGenerator(true)}>
+                                <Sparkles className="w-3 h-3" /> Generar Anuncio
+                              </Button>
+                            )}
+                            <Button size="sm" variant="outline" className="text-xs gap-1 border-slate-200 hover:bg-slate-100" onClick={() => {
+                              setEditingSmeAgentIndex(index);
+                              const typeFound = SME_AGENT_TYPES.find(t => t.name === agent.role);
+                              setNewSmeAgent({ name: agent.name, type: typeFound?.id || "secretaria", tasks: agent.capabilities });
+                              setShowSmeAddAgent(true);
+                            }}><Settings className="w-3 h-3" /> Configurar</Button>
+                            {agent.status === "activo"
+                              ? <Button size="sm" variant="ghost" className="text-xs gap-1 ml-auto text-muted-foreground hover:text-red-500"><Pause className="w-3 h-3" /> Pausar</Button>
+                              : <Button size="sm" variant="ghost" className="text-xs gap-1 ml-auto text-blue-600 hover:bg-blue-50"><Play className="w-3 h-3" /> Activar</Button>
+                            }
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+
+                {/* Tab: Agentes - ENTERPRISE MODE */}
+                {activeTab === "agentes" && panelMode === "enterprise" && (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
@@ -4016,8 +4478,249 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
                   </div>
                 )}
 
-                {/* Tab: Clientes - Enhanced CRM */}
-                {activeTab === "clientes" && (
+                {/* Tab: Leads / Prospectos - SME simple mode */}
+                {activeTab === "leads" && panelMode === "sme" && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-xl font-bold">Leads y Prospectos</h2>
+                        <p className="text-xs text-muted-foreground">{smeProspects.length} contactos potenciales importados</p>
+                      </div>
+                      <Button size="sm" className="gap-1 bg-blue-500 hover:bg-blue-600"><Plus className="w-4 h-4" /> Añadir Lead</Button>
+                    </div>
+
+                    {/* Quick stats */}
+                    <div className="grid grid-cols-4 gap-3">
+                      {[
+                        { label: "Total", value: smeProspects.length.toString(), color: "text-foreground" },
+                        { label: "Pendientes", value: smeProspects.filter(p => p.status === 'pendiente').length.toString(), color: "text-yellow-600" },
+                        { label: "Contactados", value: smeProspects.filter(p => p.status === 'contactado').length.toString(), color: "text-blue-600" },
+                        { label: "Citas", value: smeProspects.filter(p => p.status === 'cita').length.toString(), color: "text-emerald-600" },
+                      ].map((s) => (
+                        <Card key={s.label} className="p-3 text-center border-blue-50 shadow-sm">
+                          <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
+                          <div className="text-[11px] text-muted-foreground">{s.label}</div>
+                        </Card>
+                      ))}
+                    </div>
+
+                    {/* Prospect list */}
+                    <div className="space-y-3">
+                      {smeProspects.map((p) => (
+                        <Card key={p.id} className="hover:shadow-md transition-all border-blue-100">
+                          <CardContent className="p-4">
+                            <div className="flex items-center gap-4">
+                              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg shrink-0">
+                                {p.name.charAt(0)}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-0.5">
+                                  <span className="font-semibold">{p.name}</span>
+                                  <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${p.status === "pendiente" ? "bg-yellow-100 text-yellow-700" :
+                                    p.status === "contactado" ? "bg-blue-100 text-blue-700" :
+                                      p.status === "cita" ? "bg-emerald-100 text-emerald-700" :
+                                        "bg-gray-100 text-gray-500"
+                                    }`}>{p.status}</span>
+                                </div>
+                                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                  <Phone className="w-3 h-3" />{p.phone}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <Button size="sm" className="gap-1 bg-blue-500 hover:bg-blue-600 h-8 text-xs" onClick={() => {
+                                  setCallingData({ name: p.name, phone: p.phone });
+                                  setIsCalling(true);
+                                }}>
+                                  <Phone className="w-3 h-3" /> Llamar
+                                </Button>
+                                <Button size="sm" variant="outline" className="gap-1 h-8 text-xs border-blue-200 text-blue-600 hover:bg-blue-50" onClick={() => {
+                                  setNewSmeAppointment({ ...newSmeAppointment, client: p.name });
+                                  setShowSmeAppointmentModal(true);
+                                }}>
+                                  <Calendar className="w-3 h-3" /> Cita
+                                </Button>
+                                <Button size="sm" variant="outline" className="gap-1 h-8 text-xs border-blue-200 text-blue-600 hover:bg-blue-50" onClick={() => {
+                                  setEmailTo(p.email);
+                                  setEmailContent({ subject: `Consulta de ${formData.empresa || 'FinAI Pro'}`, body: `Hola ${p.name},\n\n` });
+                                  setShowEmailModal(true);
+                                }}>
+                                  <Mail className="w-3 h-3" /> Email
+                                </Button>
+                                <Button size="sm" variant="ghost" className="gap-1 h-8 text-xs text-blue-500 hover:bg-blue-50" onClick={() => {
+                                  setSelectedAgent("agent-sme-2"); // Marco for leads
+                                  if (chatFloating) setChatWidth(450);
+                                }}>
+                                  <MessageCircle className="w-3 h-3" /> Chat
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+
+                    {/* Sofía CTA */}
+                    <Card className="bg-gradient-to-r from-pink-500/10 to-rose-500/10 border-pink-300/30">
+                      <CardContent className="p-4 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center text-xl shrink-0">📞</div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">Sofía puede llamar a estos prospectos automáticamente</p>
+                          <p className="text-xs text-muted-foreground">Deja que tu secretaria virtual gestione las llamadas de prospección</p>
+                        </div>
+                        <Button size="sm" className="bg-pink-500 hover:bg-pink-600 shrink-0 gap-1" onClick={() => {
+                          setCallingData({ name: "Ronda de Prospectos", phone: "Llamadas en Lote..." });
+                          setIsCalling(true);
+                        }}><Phone className="w-3 h-3" /> Delegar a Sofía</Button>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+
+                {/* Tab: Gestión de Citas - SME mode */}
+                {activeTab === "citas" && panelMode === "sme" && (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-xl font-bold">Gestión de Citas</h2>
+                        <p className="text-xs text-muted-foreground">Calendario de reuniones y servicios</p>
+                      </div>
+                      <Button className="bg-blue-600 hover:bg-blue-700 gap-1" onClick={() => {
+                        setNewSmeAppointment({ client: "", date: "2026-03-04", time: "10:00", type: "Consulta" });
+                        setShowSmeAppointmentModal(true);
+                      }}>
+                        <Plus className="w-4 h-4" /> Nueva Cita
+                      </Button>
+                    </div>
+
+                    <div className="grid lg:grid-cols-3 gap-6">
+                      {/* Interactive Calendar Placeholder */}
+                      <Card className="lg:col-span-2 border-blue-100 shadow-sm overflow-hidden">
+                        <CardHeader className="bg-blue-50/50 border-b pb-3">
+                          <div className="flex items-center justify-between font-bold text-blue-800">
+                            <span>Marzo 2026</span>
+                            <div className="flex gap-1">
+                              <Button variant="ghost" size="icon" className="h-7 w-7"><ChevronLeft className="w-4 h-4" /></Button>
+                              <Button variant="ghost" size="icon" className="h-7 w-7"><ChevronRight className="w-4 h-4" /></Button>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                          <div className="grid grid-cols-7 border-b text-[10px] sm:text-xs font-bold text-center uppercase tracking-wider py-2 bg-slate-50 text-slate-500">
+                            {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map(d => <div key={d}>{d}</div>)}
+                          </div>
+                          <div className="grid grid-cols-7 text-center text-xs auto-rows-fr">
+                            {Array.from({ length: 31 }).map((_, i) => {
+                              const day = i + 1;
+                              const hasApts = smeAppointments.filter(a => a.date === `2026-03-${day.toString().padStart(2, '0')}`);
+                              return (
+                                <div key={i} className={`p-2 border-r border-b min-h-[90px] flex flex-col items-start transition-colors hover:bg-blue-50/30 ${day === 4 ? 'bg-blue-50' : ''}`}>
+                                  <span className={`w-6 h-6 flex items-center justify-center rounded-full mb-1 ${day === 4 ? 'bg-blue-600 text-white font-bold' : ''}`}>{day}</span>
+                                  <div className="w-full space-y-1">
+                                    {hasApts.map(apt => (
+                                      <div key={apt.id} className="text-[9px] bg-white border border-blue-200 text-blue-700 px-1 py-0.5 rounded truncate shadow-sm">
+                                        {apt.time} - {apt.client}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Agenda of the day */}
+                      <Card className="border-blue-100 shadow-sm flex flex-col">
+                        <CardHeader className="bg-slate-50 border-b">
+                          <CardTitle className="text-sm">Agenda de Hoy</CardTitle>
+                          <CardDescription className="text-[10px]">Jueves, 4 de Marzo</CardDescription>
+                        </CardHeader>
+                        <CardContent className="p-0 flex-1 overflow-y-auto max-h-[500px]">
+                          <div className="divide-y">
+                            {smeAppointments.filter(a => a.date === "2026-03-04").sort((a, b) => a.time.localeCompare(b.time)).map((apt) => (
+                              <div key={apt.id} className="p-3 hover:bg-blue-50 transition-colors flex gap-3">
+                                <div className="text-[10px] font-bold text-slate-400 w-10 text-right pt-1">{apt.time}</div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-sm font-semibold truncate">{apt.client}</div>
+                                  <div className="flex items-center gap-1.5 mt-1">
+                                    <Badge variant="outline" className="text-[9px] h-4 border-blue-200 text-blue-600">{apt.type}</Badge>
+                                    <span className={`w-1.5 h-1.5 rounded-full ${apt.status === 'confirmed' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                                    <span className="text-[10px] text-muted-foreground capitalize">{apt.status}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                        <CardFooter className="p-3 border-t bg-blue-50/20">
+                          <Button variant="outline" size="sm" className="w-full text-xs gap-1 border-blue-200 text-blue-700" onClick={() => {
+                            setCallingData({ name: "Próxima Cita", phone: "Confirmando asistencia..." });
+                            setIsCalling(true);
+                          }}>
+                            <Bot className="w-3 h-3" /> Dejar que Sofía confirme citas
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    </div>
+                  </div>
+                )}
+
+                {/* Calling Overlay */}
+                <AnimatePresence>
+                  {isCalling && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 50 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 50 }}
+                      className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] w-[400px] max-w-full px-4"
+                    >
+                      <Card className="bg-slate-900 text-white border-2 border-emerald-500 shadow-2xl p-4">
+                        <div className="flex items-center gap-4">
+                          <div className="relative">
+                            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-xl font-bold">
+                              {callingData?.name.charAt(0)}
+                            </div>
+                            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-slate-900 flex items-center justify-center">
+                              <Phone className="w-2.5 h-2.5 animate-pulse" />
+                            </div>
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-bold">{callingData?.name}</h4>
+                            <p className="text-xs text-slate-400">{callingData?.phone}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider animate-pulse">Llamando...</span>
+                              <div className="flex gap-0.5">
+                                <div className="w-1 h-3 bg-emerald-500/30 animate-grow-1" />
+                                <div className="w-1 h-3 bg-emerald-500/30 animate-grow-2" />
+                                <div className="w-1 h-3 bg-emerald-500/30 animate-grow-3" />
+                              </div>
+                            </div>
+                          </div>
+                          <Button size="icon" variant="destructive" className="rounded-full h-10 w-10" onClick={() => setIsCalling(false)}>
+                            <PhoneOff className="w-5 h-5" />
+                          </Button>
+                        </div>
+                        {/* Simulated voice wave */}
+                        <div className="mt-4 flex justify-between items-center px-2">
+                          {Array.from({ length: 20 }).map((_, i) => (
+                            <div
+                              key={i}
+                              className="w-1 bg-emerald-500/40 rounded-full transition-all duration-300"
+                              style={{
+                                height: `${Math.random() * 20 + 4}px`,
+                                animation: `wave 1s ease-in-out infinite ${i * 0.05}s`
+                              }}
+                            />
+                          ))}
+                        </div>
+                        <p className="text-center text-[10px] text-slate-500 mt-2">Sofía está conectando con el cliente...</p>
+                      </Card>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Tab: Clientes - Enhanced CRM (Enterprise) */}
+                {activeTab === "clientes" && panelMode === "enterprise" && (
                   <div className="space-y-6" onMouseEnter={() => setCursorType('client')}>
                     {/* Sub-tabs for Clientes and Directivos */}
                     <div className="flex gap-2 border-b pb-2">
@@ -5777,11 +6480,11 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
                 <CardHeader className="pb-2 border-b">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm flex items-center gap-2">
-                      <MessageSquareMore className="w-4 h-4 text-emerald-500" />
+                      <MessageSquareMore className={`w-4 h-4 ${panelMode === 'sme' ? 'text-blue-500' : 'text-emerald-500'}`} />
                       Chat con Agentes
                     </CardTitle>
                     <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setChatFloating(!chatFloating)} title="Ventana flotante">
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setChatFloating(!chatFloating); if (!chatFloating) setChatWidth(450); }} title="Ventana flotante">
                         {chatFloating ? <Minimize2 className="w-3 h-3" /> : <ExternalLink className="w-3 h-3" />}
                       </Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setChatExpanded(!chatExpanded)} title="Pantalla completa">
@@ -5794,16 +6497,16 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
                   <div className="mt-3">
                     {chatMode === "single" && (
                       <Select value={selectedAgent || ""} onValueChange={setSelectedAgent}>
-                        <SelectTrigger className="h-11 text-sm font-medium border-2 border-emerald-500/50 bg-emerald-500/5 hover:bg-emerald-500/10 transition-colors">
+                        <SelectTrigger className={`h-11 text-sm font-medium border-2 transition-colors ${panelMode === 'sme' ? 'border-blue-500/50 bg-blue-500/5 hover:bg-blue-500/10' : 'border-emerald-500/50 bg-emerald-500/5 hover:bg-emerald-500/10'}`}>
                           <SelectValue placeholder="Seleccionar agente..." />
                         </SelectTrigger>
-                        <SelectContent>
-                          {userAgents.filter((a: any) => a.active).map((agent: any) => (
+                        <SelectContent className="z-[100]">
+                          {[...userAgents, ...smeAgents.map((a, i) => ({ ...a, id: `agent-sme-${i + 1}` }))].filter((a: any) => a.active || a.status === "activo").map((agent: any) => (
                             <SelectItem key={agent.id} value={agent.id} className="text-sm">
                               <div className="flex items-center gap-2">
-                                <Bot className="w-4 h-4 text-emerald-500" />
+                                <Bot className={`w-4 h-4 ${panelMode === 'sme' ? 'text-blue-500' : 'text-emerald-500'}`} />
                                 <span className="font-medium">{agent.name}</span>
-                                <Badge variant="outline" className="text-[10px] ml-auto">{agent.model.split(' ')[0]}</Badge>
+                                <Badge variant="outline" className="text-[10px] ml-auto">{agent.model ? agent.model.split(' ')[0] : 'IA'}</Badge>
                               </div>
                             </SelectItem>
                           ))}
@@ -5811,8 +6514,8 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
                       </Select>
                     )}
                     <div className="flex items-center gap-2 mt-2">
-                      <Button variant={chatMode === "single" ? "default" : "ghost"} size="sm" onClick={() => setChatMode("single")} className={`h-8 text-xs ${chatMode === "single" ? "bg-emerald-500" : ""}`}>1:1</Button>
-                      <Button variant={chatMode === "group" ? "default" : "ghost"} size="sm" onClick={() => setChatMode("group")} className={`h-8 text-xs ${chatMode === "group" ? "bg-emerald-500" : ""}`}><Users className="w-3 h-3 mr-1" /> Grupo</Button>
+                      <Button variant={chatMode === "single" ? "default" : "ghost"} size="sm" onClick={() => setChatMode("single")} className={`h-8 text-xs ${chatMode === "single" ? (panelMode === 'sme' ? "bg-blue-600 hover:bg-blue-700" : "bg-emerald-500 hover:bg-emerald-600") : ""}`}>1:1</Button>
+                      <Button variant={chatMode === "group" ? "default" : "ghost"} size="sm" onClick={() => setChatMode("group")} className={`h-8 text-xs ${chatMode === "group" ? (panelMode === 'sme' ? "bg-blue-600 hover:bg-blue-700" : "bg-emerald-500 hover:bg-emerald-600") : ""}`}><Users className="w-3 h-3 mr-1" /> Grupo</Button>
                     </div>
                   </div>
 
@@ -5847,9 +6550,9 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
                 <CardContent className="flex-1 overflow-y-auto p-3 space-y-3">
                   {chatMessages.map((msg, i) => (
                     <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                      <div className={`max-w-[85%] rounded-xl p-3 ${msg.role === "user" ? "bg-emerald-500 text-white" : "bg-muted border"}`}>
+                      <div className={`max-w-[85%] rounded-xl p-3 ${msg.role === "user" ? (panelMode === 'sme' ? "bg-blue-600 text-white shadow-md shadow-blue-500/20" : "bg-emerald-500 text-white") : "bg-muted border"}`}>
                         {msg.agent && (
-                          <div className="text-[11px] font-bold text-emerald-600 mb-1 flex items-center gap-1">
+                          <div className={`text-[11px] font-bold mb-1 flex items-center gap-1 ${panelMode === 'sme' ? 'text-blue-600' : 'text-emerald-600'}`}>
                             <Bot className="w-3 h-3" />
                             {msg.agent}
                           </div>
@@ -5861,10 +6564,10 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
                   <div ref={chatEndRef} />
                 </CardContent>
 
-                <CardFooter className="p-2 border-t gap-1">
-                  <Input placeholder="Escribe un mensaje..." value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === "Enter" && handleSendMessage()} className="flex-1 h-9 text-sm" />
-                  <Button size="icon" onClick={handleSendMessage} className="bg-emerald-500 hover:bg-emerald-600 h-9 w-9 shrink-0"><Send className="w-4 h-4" /></Button>
-                  <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => setChatMessages([{ role: "assistant", content: "¡Hola! Soy tu asistente. ¿En qué puedo ayudarte?", agent: "Sistema" }])}><Trash2 className="w-4 h-4" /></Button>
+                <CardFooter className="p-2 border-t gap-1 bg-slate-50/50">
+                  <Input placeholder="Escribe un mensaje..." value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === "Enter" && handleSendMessage()} className={`flex-1 h-10 text-sm ${panelMode === 'sme' ? 'border-blue-100 focus-visible:ring-blue-500' : ''}`} />
+                  <Button size="icon" onClick={handleSendMessage} className={`h-10 w-10 shrink-0 ${panelMode === 'sme' ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/20 shadow-lg' : 'bg-emerald-500 hover:bg-emerald-600'}`}><Send className="w-4 h-4" /></Button>
+                  <Button variant="outline" size="icon" className="h-10 w-10" onClick={() => setChatMessages([{ role: "assistant", content: "¡Hola! Soy tu asistente. ¿Enqué puedo ayudarte?", agent: "Sistema" }])}><Trash2 className="w-4 h-4" /></Button>
                 </CardFooter>
               </Card>
             </ResizablePanel>
@@ -6069,19 +6772,73 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
         )}
       </AnimatePresence>
 
+      {/* SME Appointment Modal */}
+      <AnimatePresence>
+        {showSmeAppointmentModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-background rounded-2xl p-6 max-w-sm w-full border-2 border-blue-500/20">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center text-white">
+                    <Calendar className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-lg font-bold text-blue-600">Nueva Cita</h3>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setShowSmeAppointmentModal(false)}><X className="w-4 h-4" /></Button>
+              </div>
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <Label className="text-xs">Cliente</Label>
+                  <Input value={newSmeAppointment.client} onChange={e => setNewSmeAppointment({ ...newSmeAppointment, client: e.target.value })} placeholder="Nombre del cliente" className="border-blue-100" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Fecha</Label>
+                    <Input type="date" value={newSmeAppointment.date} onChange={e => setNewSmeAppointment({ ...newSmeAppointment, date: e.target.value })} className="border-blue-100" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Hora</Label>
+                    <Input type="time" value={newSmeAppointment.time} onChange={e => setNewSmeAppointment({ ...newSmeAppointment, time: e.target.value })} className="border-blue-100" />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Tipo de Servicio</Label>
+                  <Select value={newSmeAppointment.type} onValueChange={v => setNewSmeAppointment({ ...newSmeAppointment, type: v })}>
+                    <SelectTrigger className="border-blue-100"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Consulta">Consulta</SelectItem>
+                      <SelectItem value="Revisión">Revisión</SelectItem>
+                      <SelectItem value="Presupuesto">Presupuesto</SelectItem>
+                      <SelectItem value="Venta">Venta</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <Button variant="outline" className="flex-1" onClick={() => setShowSmeAppointmentModal(false)}>Cancelar</Button>
+                  <Button className="flex-1 bg-blue-600 hover:bg-blue-700" onClick={() => {
+                    setSmeAppointments([...smeAppointments, { ...newSmeAppointment, id: Date.now(), status: 'confirmed' }]);
+                    setShowSmeAppointmentModal(false);
+                  }}>Agendar</Button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Email Modal */}
       <AnimatePresence>
-        {showEmailModal && selectedClient && (
+        {showEmailModal && (selectedClient || emailTo) && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
             <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="bg-background rounded-2xl p-6 max-w-lg w-full">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                    <Mail className="w-5 h-5 text-blue-500" />
+                  <div className={`w-10 h-10 rounded-xl ${panelMode === 'sme' ? 'bg-blue-500' : 'bg-emerald-500'} flex items-center justify-center text-white`}>
+                    <Mail className="w-5 h-5" />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold">Nuevo Email</h3>
-                    <p className="text-xs text-muted-foreground">{selectedClient.name}</p>
+                    <p className="text-xs text-muted-foreground">{selectedClient?.name || emailTo}</p>
                   </div>
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => setShowEmailModal(false)}><X className="w-4 h-4" /></Button>
@@ -6090,7 +6847,7 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
               <div className="space-y-3">
                 <div>
                   <Label className="text-xs">Para</Label>
-                  <Input value={selectedClient.email} readOnly className="mt-1 h-9 bg-muted/50" />
+                  <Input value={selectedClient?.email || emailTo} readOnly className="mt-1 h-9 bg-muted/50" />
                 </div>
                 <div>
                   <Label className="text-xs">Asunto</Label>
@@ -6106,18 +6863,12 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
                     <Bot className="w-3 h-3" />
                     {agentWritingEmail ? "Escribiendo..." : "Agente escribe"}
                   </Button>
-                  {agentWritingEmail && (
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <RefreshCw className="w-3 h-3 animate-spin" />
-                      Generando...
-                    </div>
-                  )}
                 </div>
               </div>
 
               <div className="flex gap-2 mt-4">
                 <Button variant="outline" className="flex-1" onClick={() => setShowEmailModal(false)}>Cancelar</Button>
-                <Button className="flex-1 bg-emerald-500 hover:bg-emerald-600 gap-1" onClick={sendEmail}>
+                <Button className={`flex-1 ${panelMode === 'sme' ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/20 shadow-lg' : 'bg-emerald-500 hover:bg-emerald-600'} gap-1`} onClick={sendEmail}>
                   <Send className="w-4 h-4" /> Enviar
                 </Button>
               </div>
@@ -6165,6 +6916,13 @@ function DashboardPanel({ setCurrentView, formData, setFormData }: { setCurrentV
           </div>
         )}
       </div>
+
+      {/* Ad Generator Modal - Elena Community Manager */}
+      <AdGeneratorModal
+        isOpen={showAdGenerator}
+        onClose={() => setShowAdGenerator(false)}
+        empresa={formData.empresa || "Mi Negocio"}
+      />
     </div>
   );
 }
@@ -6269,6 +7027,19 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <style jsx global>{`
+        @keyframes wave {
+          0%, 100% { height: 4px; opacity: 0.3; }
+          50% { height: 20px; opacity: 1; }
+        }
+        @keyframes grow {
+          0%, 100% { transform: scaleY(0.5); }
+          50% { transform: scaleY(1.5); }
+        }
+        .animate-grow-1 { animation: grow 1s ease-in-out infinite; }
+        .animate-grow-2 { animation: grow 1s ease-in-out infinite 0.2s; }
+        .animate-grow-3 { animation: grow 1s ease-in-out infinite 0.4s; }
+      `}</style>
       {currentView !== "panel" && <Navbar currentView={currentView} setCurrentView={setCurrentView} />}
       <main className={`flex-1 ${currentView === "panel" ? "" : ""}`}>
         <AnimatePresence mode="wait">

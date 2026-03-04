@@ -1,41 +1,58 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import ZAI from 'z-ai-web-dev-sdk';
 
-export async function POST(req: Request) {
-    try {
-        const { messages, system_prompt } = await req.json();
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { messages, system_prompt } = body;
 
-        const apiKey = "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";
-
-        const apiMessages: any[] = [];
-        if (system_prompt) {
-            apiMessages.push({ role: "system", content: system_prompt });
-        }
-        apiMessages.push(...messages);
-
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${apiKey}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                model: "openai/gpt-3.5-turbo",
-                messages: apiMessages,
-            })
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            return NextResponse.json({ error: "No response from AI", details: errorText }, { status: response.status });
-        }
-
-        const data = await response.json();
-        if (data.choices && data.choices[0]) {
-            return NextResponse.json({ reply: data.choices[0].message.content });
-        }
-
-        return NextResponse.json({ error: "Empty choices", details: data }, { status: 500 });
-    } catch (error) {
-        return NextResponse.json({ error: String(error) }, { status: 500 });
+    if (!messages || !Array.isArray(messages)) {
+      return NextResponse.json(
+        { error: 'Se requiere un array de mensajes' },
+        { status: 400 }
+      );
     }
+
+    const zai = await ZAI.create();
+
+    // Construir el sistema prompt por defecto si no se proporciona
+    const defaultSystemPrompt = `Eres un asistente de IA amable y profesional que trabaja para FinAI Pro. 
+Ayudas a usuarios con consultas sobre sus agentes de IA, dashboards, análisis de datos y automatización de procesos.
+Responde de forma concisa, útil y en español.`;
+
+    const systemMessage = system_prompt || defaultSystemPrompt;
+
+    // Formatear mensajes para la API
+    const formattedMessages = [
+      { role: 'assistant', content: systemMessage },
+      ...messages.map((msg: { role: string; content: string }) => ({
+        role: msg.role === 'assistant' ? 'assistant' : 'user',
+        content: msg.content
+      }))
+    ];
+
+    const completion = await zai.chat.completions.create({
+      messages: formattedMessages,
+      thinking: { type: 'disabled' }
+    });
+
+    const reply = completion.choices[0]?.message?.content || 'Lo siento, no pude procesar tu solicitud.';
+
+    return NextResponse.json({ reply });
+
+  } catch (error: unknown) {
+    console.error('Error in chat API:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Error al procesar la solicitud';
+    return NextResponse.json(
+      { error: errorMessage, reply: 'Lo siento, ha ocurrido un error al procesar tu mensaje. Por favor, inténtalo de nuevo.' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET() {
+  return NextResponse.json({
+    status: 'ok',
+    message: 'Chat API is running'
+  });
 }

@@ -1,6 +1,9 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -16,9 +19,6 @@ model User {
   name      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  profile   Profile?
-  posts     Post[]
 }
 
 model Post {
@@ -27,48 +27,6 @@ model Post {
   content   String?
   published Boolean  @default(false)
   authorId  String
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-model Profile {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type        String   // "FREELANCER", "ENTREPRENEUR", "INVESTOR"
-  companyName String?
-  sector      String?  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  assets      Asset[]
-  campaigns   Campaign[]
-}
-
-model Asset {
-  id          String   @id @default(cuid())
-  profileId   String
-  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  type        String   // "LANDING", "SOCIAL_AD", "WEB_CONTENT", "SECTION", "DESIGN"
-  title       String
-  content     String?
-  url         String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model Campaign {
-  id            String   @id @default(cuid())
-  profileId     String
-  profile       Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  sourceType    String   // "ORGANIC" or "PPC"
-  sourceName    String   
-  leads         Int      @default(0)
-  calls         Int      @default(0)
-  visits        Int      @default(0)
-  biddingActive Boolean  @default(false)
-  currentBid    Float?   
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
 }
